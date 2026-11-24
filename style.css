@@ -1,0 +1,195 @@
+/* ==========================================================================
+   LacakHP Pro - Enterprise Cyber Dispatch Theme
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --bg-dark: #0b1326;
+  --surface-lowest: #060e20;
+  --surface-low: #131b2e;
+  --surface-container: #171f33;
+  --surface-high: #222a3d;
+  --surface-highest: #2d3449;
+  --surface-bright: #31394d;
+  
+  --primary: #8ed5ff;
+  --primary-container: #38bdf8;
+  --on-primary: #00354a;
+  
+  --secondary: #89ceff;
+  --tertiary: #ffbcbf;
+  
+  --error: #ffb4ab;
+  --error-container: #93000a;
+  --on-error: #690005;
+  
+  --on-surface: #dae2fd;
+  --on-surface-variant: #bdc8d1;
+  --outline: #87929a;
+  --outline-variant: #3e484f;
+  
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-dark);
+  color: var(--on-surface);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface-low);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surface-highest);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--outline);
+}
+
+/* Font helpers */
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Tabular number display for GPS coordinates, IMEI, and battery */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+}
+
+/* Leaflet Map Custom Overrides for Cyber Dark Theme */
+.leaflet-container {
+  background: #090e1a !important;
+  font-family: var(--font-sans) !important;
+}
+
+.leaflet-bar a {
+  background-color: #171f33 !important;
+  color: #8ed5ff !important;
+  border-bottom: 1px solid #222a3d !important;
+}
+
+.leaflet-bar a:hover {
+  background-color: #222a3d !important;
+  color: #c4e7ff !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background-color: #171f33 !important;
+  color: #dae2fd !important;
+  border: 1px solid #2d3449;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+}
+
+.leaflet-popup-tip {
+  background: #171f33 !important;
+}
+
+/* Pulse animation for active GPS markers */
+@keyframes radar-ping {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  70% { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+.radar-ping-ring {
+  animation: radar-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes siren-blink {
+  0%, 100% { background-color: #93000a; box-shadow: 0 0 20px rgba(244, 63, 94, 0.6); }
+  50% { background-color: #f43f5e; box-shadow: 0 0 35px rgba(244, 63, 94, 0.9); }
+}
+
+.animate-siren {
+  animation: siren-blink 0.8s infinite;
+}
+
+/* Grid background pattern */
+.bg-grid-cyber {
+  background-image: radial-gradient(rgba(142, 213, 255, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Transition classes */
+.tab-content {
+  display: none;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Toast notifications */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  min-width: 300px;
+  max-width: 420px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  background: #171f33;
+  color: #dae2fd;
+  border-left: 4px solid #38bdf8;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s ease;
+}
+
+.toast.toast-error {
+  border-left-color: #f43f5e;
+}
+
+.toast.toast-success {
+  border-left-color: #10b981;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Modal styling */
+.modal-overlay {
+  background: rgba(6, 14, 32, 0.85);
+  backdrop-filter: blur(8px);
+}
