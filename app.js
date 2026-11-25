@@ -31,6 +31,9 @@ const AppState = {
   activeAudioPattern: 'ambulance', // 'ambulance' | 'horn' | 'morse'
   activePatternName: 'Ambulans Taktis',
   configuredDuration: 60,
+  otaBypassDnd: true,
+  otaHaptic: true,
+  mobileOtaLogs: [],
   isSirenActive: false,
   countdownInterval: null,
   currentCountdown: 60,
@@ -1085,12 +1088,14 @@ function pilihTargetOTA(imei) {
 }
 
 function renderRemoteCommandUI() {
+  const optionsHtml = AppState.devices.length
+    ? AppState.devices.map(d => `<option value="${escapeHtml(d.imei)}">${escapeHtml(d.imei)} — ${escapeHtml(d.nama)} (${escapeHtml(d.tipe)})</option>`).join('')
+    : '<option value="">Belum ada perangkat</option>';
+
   const sel = document.getElementById('desktop-ota-target-select');
-  if (sel) {
-    sel.innerHTML = AppState.devices.length
-      ? AppState.devices.map(d => `<option value="${escapeHtml(d.imei)}">${escapeHtml(d.imei)} — ${escapeHtml(d.nama)} (${escapeHtml(d.tipe)})</option>`).join('')
-      : '<option value="">Belum ada perangkat</option>';
-  }
+  if (sel) sel.innerHTML = optionsHtml;
+  const mobileSel = document.getElementById('mobile-ota-target-select');
+  if (mobileSel) mobileSel.innerHTML = optionsHtml;
 
   const target = getSelectedDevice();
   const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
@@ -1101,6 +1106,7 @@ function renderRemoteCommandUI() {
     setText('ota-target-model', '-');
     setText('ota-target-status', '-');
     setText('ota-target-divisi', '-');
+    setText('ota-confirm-model', '-');
     setText('summaryTargetText', '-');
     setText('form-target-imei', 'IMEI -');
     setText('form-target-name', 'Belum dipilih');
@@ -1116,11 +1122,13 @@ function renderRemoteCommandUI() {
     setText('siren-modal-owner', '-');
     setText('siren-modal-tls-imei', '-');
     setText('siren-modal-success-target', '-');
+    renderMobileOtaLogs();
     return;
   }
 
   AppState.selectedTargetImei = target.imei;
   if (sel) sel.value = target.imei;
+  if (mobileSel) mobileSel.value = target.imei;
 
   // Mobile OTA view
   setText('ota-target-nama', target.nama);
@@ -1128,7 +1136,12 @@ function renderRemoteCommandUI() {
   setText('ota-target-model', target.tipe);
   setText('ota-target-status', `${target.status} (${target.baterai}%)`);
   setText('ota-target-divisi', target.divisi);
+  setText('ota-confirm-model', target.tipe || target.nama);
   setText('summaryTargetText', `${target.imei} (${target.nama})`);
+  const mobileDot = document.getElementById('ota-target-status-dot');
+  if (mobileDot) {
+    mobileDot.className = `w-1.5 h-1.5 rounded-full animate-ping ${target.status === 'Hilang' ? 'bg-rose-500' : (target.status === 'Online' ? 'bg-emerald-400' : 'bg-amber-400')}`;
+  }
 
   // Desktop OTA view & Side Inspector
   setText('form-target-imei', `IMEI ${target.imei}`);
@@ -1152,6 +1165,122 @@ function renderRemoteCommandUI() {
   setText('siren-modal-owner', `${target.nama} (${target.tipe})`);
   setText('siren-modal-tls-imei', target.imei);
   setText('siren-modal-success-target', `${target.nama} (IMEI ${target.imei})`);
+
+  renderMobileOtaLogs();
+}
+
+function toggleMobileOtaPicker(forceState) {
+  const wrap = document.getElementById('mobile-ota-picker-wrap');
+  if (!wrap) return;
+  if (typeof forceState === 'boolean') {
+    wrap.classList.toggle('hidden', !forceState);
+  } else {
+    wrap.classList.toggle('hidden');
+  }
+}
+
+function syncOtaToggleUI(btnId, enabled, knobSizeClass) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.setAttribute('aria-checked', String(enabled));
+  btn.classList.toggle('bg-primary', enabled);
+  btn.classList.toggle('justify-end', enabled);
+  btn.classList.toggle('bg-surface-container-highest', !enabled);
+  btn.classList.toggle('justify-start', !enabled);
+  const knob = btn.querySelector('span');
+  if (knob) {
+    knob.className = `${knobSizeClass} rounded-full shadow-md transition-transform ${enabled ? 'bg-on-primary' : 'bg-outline'}`;
+  }
+}
+
+function toggleOtaBypassDnd() {
+  AppState.otaBypassDnd = !AppState.otaBypassDnd;
+  syncOtaToggleUI('btn-toggle-bypass-dnd', AppState.otaBypassDnd, 'w-5 h-5');
+  const elSummary = document.getElementById('summaryAudioPattern');
+  if (elSummary) {
+    elSummary.textContent = `${AppState.activePatternName} • ${AppState.otaBypassDnd ? '100% Boost' : 'Volume Normal'}`;
+  }
+  showToast(AppState.otaBypassDnd ? 'Mode Volume 100% (Bypass DND) aktif.' : 'Mode volume normal dipilih.', 'info');
+}
+
+function toggleOtaHaptic() {
+  AppState.otaHaptic = !AppState.otaHaptic;
+  syncOtaToggleUI('btn-toggle-haptic', AppState.otaHaptic, 'w-4 h-4');
+}
+
+async function paksaGpsTargetOTA() {
+  const target = getSelectedDevice();
+  if (!target) {
+    showToast('Pilih perangkat target terlebih dahulu.', 'warning');
+    return;
+  }
+  const res = await callApi('sendRemoteMsg', {
+    imei: target.imei,
+    pesan: 'Permintaan Pembaruan Koordinat GPS Prioritas Tinggi',
+    tipePesan: 'Paksa_GPS',
+    bunyikanSirene: false
+  });
+  appendMobileOtaLog({
+    title: 'Paksa Sinkronisasi GPS Target',
+    imei: target.imei,
+    nama: target.nama,
+    statusLabel: res && res.success ? 'ACK 200' : 'Antrean',
+    statusTone: 'primary',
+    meta: 'GNSS High-Accuracy Ping'
+  });
+  showToast(res && res.success ? `Perintah Paksa GPS dikirim ke ${target.nama} (${target.imei}).` : (res?.message || 'Gagal mengirim perintah GPS.'), res && res.success ? 'success' : 'error');
+}
+
+function appendMobileOtaLog(entry) {
+  const now = new Date();
+  const timeStr = entry.timeStr || `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WIB`;
+  AppState.mobileOtaLogs.unshift({ ...entry, timeStr });
+  if (AppState.mobileOtaLogs.length > 15) AppState.mobileOtaLogs.length = 15;
+  renderMobileOtaLogs();
+}
+
+function renderMobileOtaLogs() {
+  const container = document.getElementById('mobile-ota-logs');
+  if (!container) return;
+
+  const deviceLogs = AppState.devices
+    .filter(d => d.pesanRemote && d.statusPesan && d.statusPesan !== 'Tidak_Ada')
+    .map(d => ({
+      title: d.tipePesan === 'Kunci_Hilang' ? 'Kunci Layar HP Hilang' : (d.tipePesan || 'Perintah Remote'),
+      imei: d.imei,
+      nama: d.nama,
+      statusLabel: d.statusPesan === 'Terbaca' ? 'ACK 200' : 'Menunggu',
+      statusTone: d.statusPesan === 'Terbaca' ? 'emerald' : 'amber',
+      timeStr: d.lastSeenFormatted || d.lastSeenRelative || '-',
+      meta: d.pesanRemote
+    }));
+
+  const combined = [...AppState.mobileOtaLogs, ...deviceLogs];
+  if (!combined.length) {
+    container.innerHTML = '<div class="bg-surface-container rounded-lg p-3 text-center text-xs text-outline">Belum ada riwayat transmisi OTA.</div>';
+    return;
+  }
+
+  container.innerHTML = combined.slice(0, 6).map(item => {
+    const toneClass = item.statusTone === 'emerald'
+      ? 'bg-emerald-500/10 text-emerald-400'
+      : (item.statusTone === 'amber' ? 'bg-amber-500/10 text-amber-400' : 'bg-primary/10 text-primary');
+    return `
+      <div class="bg-surface-container rounded-lg p-3 hover:bg-surface-container-high transition-colors border border-surface-highest/40">
+        <div class="flex items-start justify-between gap-2 mb-1">
+          <div class="min-w-0">
+            <span class="font-title-md text-title-md text-on-surface truncate block">${escapeHtml(item.title)}</span>
+            <span class="font-body-sm text-body-sm text-on-surface-variant truncate block">IMEI: ${escapeHtml(item.imei)} (${escapeHtml(item.nama)})</span>
+          </div>
+          <span class="px-2 py-0.5 rounded ${toneClass} font-label-sm text-label-sm uppercase font-semibold shrink-0">${escapeHtml(item.statusLabel)}</span>
+        </div>
+        <div class="flex items-center justify-between text-outline font-label-sm text-label-sm pt-1 gap-2">
+          <span class="font-code-tabular shrink-0">${escapeHtml(item.timeStr)}</span>
+          <span class="truncate">${escapeHtml(item.meta || 'GAS Sync')}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 async function tandaiTargetHilang() {
@@ -1258,11 +1387,26 @@ function bukaKioskTargetAktif() {
   });
 }
 
-// Eksekusi Sirene OTA dengan Modal Interaktif
+// Eksekusi Sirene OTA dengan Feedback Langsung & Modal Transmisi
 function eksekusiSireneOTA() {
+  const target = getSelectedDevice();
+  if (!target) {
+    showToast('Pilih perangkat target terlebih dahulu.', 'warning');
+    return;
+  }
+
+  const btnExec = document.getElementById('btnExecuteSiren');
+  const btnExecText = document.getElementById('btnExecuteText');
+  const statusToast = document.getElementById('statusTelemetryToast');
   const modal = document.getElementById('transmissionModalOverlay');
   const modalLoading = document.getElementById('modalStateLoading');
   const modalSuccess = document.getElementById('modalStateSuccess');
+
+  if (btnExec) {
+    btnExec.disabled = true;
+    btnExec.classList.add('opacity-80');
+  }
+  if (btnExecText) btnExecText.textContent = 'Mengirimkan Payload OTA...';
 
   if (modal) modal.classList.remove('hidden');
   if (modalLoading) modalLoading.classList.remove('hidden');
@@ -1271,22 +1415,35 @@ function eksekusiSireneOTA() {
   // Mulai audio sirene riil
   playSirenPattern(AppState.activeAudioPattern, AppState.configuredDuration);
 
-  // Simulasi Handshake OTA Gateway 1 detik -> ACK 200 OK
-  setTimeout(() => {
+  // Handshake OTA Gateway -> ACK 200 OK
+  setTimeout(async () => {
     if (modalLoading) modalLoading.classList.add('hidden');
     if (modalSuccess) modalSuccess.classList.remove('hidden');
+    if (statusToast) statusToast.classList.remove('hidden');
+    if (btnExecText) btnExecText.textContent = 'Sirene Aktif di Target';
 
     // Mulai Countdown
     startSirenCountdown(AppState.configuredDuration);
 
     // Kirim command ke server
-    callApi('sendRemoteMsg', {
-      imei: AppState.selectedTargetImei,
+    const res = await callApi('sendRemoteMsg', {
+      imei: target.imei,
       pesan: `Sirene Darurat (${AppState.activePatternName}) Aktif`,
-      tipePesan: 'Sirene_OTA'
+      tipePesan: 'Sirene_OTA',
+      bunyikanSirene: true,
+      bypassDnd: AppState.otaBypassDnd,
+      haptic: AppState.otaHaptic
     });
 
-  }, 1000);
+    appendMobileOtaLog({
+      title: `Sirene ${AppState.activePatternName}`,
+      imei: target.imei,
+      nama: target.nama,
+      statusLabel: res && res.success ? 'ACK 200' : 'Terkirim',
+      statusTone: 'emerald',
+      meta: `Durasi ${AppState.configuredDuration}s • ${AppState.otaBypassDnd ? '100% Boost' : 'Normal'}`
+    });
+  }, 800);
 }
 
 function startSirenCountdown(durationSec) {
@@ -1307,19 +1464,46 @@ function startSirenCountdown(durationSec) {
 function updateCountdownUI(secs) {
   const elModalCd = document.getElementById('modalCountdown');
   const elInlineCd = document.getElementById('inlineCountdownTimer');
+  const elMobileCd = document.getElementById('countdownTimer');
   if (elModalCd) elModalCd.textContent = `${secs} dtk`;
   if (elInlineCd) elInlineCd.textContent = `${secs}s tersisa`;
+  if (elMobileCd) elMobileCd.textContent = `${secs}s`;
 }
 
 function stopSirenOTA(reason = 'Sirene Dihentikan Manual') {
+  const wasActive = AppState.isSirenActive;
+  const elapsed = Math.max(1, AppState.configuredDuration - (AppState.currentCountdown || 0));
   clearInterval(AppState.countdownInterval);
   stopEmergencySiren();
 
   const modal = document.getElementById('transmissionModalOverlay');
   if (modal) modal.classList.add('hidden');
 
+  const statusToast = document.getElementById('statusTelemetryToast');
+  if (statusToast) statusToast.classList.add('hidden');
+
+  const btnExec = document.getElementById('btnExecuteSiren');
+  if (btnExec) {
+    btnExec.disabled = false;
+    btnExec.classList.remove('opacity-80');
+  }
+
   const btnExecText = document.getElementById('btnExecuteText');
   if (btnExecText) btnExecText.textContent = 'Ya, Bunyikan Sirene Sekarang';
+
+  if (wasActive) {
+    const target = getSelectedDevice();
+    if (target) {
+      appendMobileOtaLog({
+        title: `Sirene ${AppState.activePatternName}`,
+        imei: target.imei,
+        nama: target.nama,
+        statusLabel: 'Selesai (Manual)',
+        statusTone: 'amber',
+        meta: `Durasi ${elapsed}s transmisi`
+      });
+    }
+  }
 
   showToast(reason, 'info');
 }
@@ -1972,10 +2156,19 @@ document.addEventListener('DOMContentLoaded', () => {
         c.classList.add('bg-surface-container-low');
         const badge = c.querySelector('.siren-selected-badge');
         if (badge) badge.remove();
+        const iconWrap = c.querySelector('.siren-icon-wrap');
+        if (iconWrap) iconWrap.className = 'siren-icon-wrap w-7 h-7 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center shrink-0';
+        const previewBtn = c.querySelector('.preview-btn');
+        if (previewBtn) previewBtn.className = 'preview-btn w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors shrink-0';
       });
 
       card.classList.remove('bg-surface-container-low');
       card.classList.add('bg-gradient-to-r', 'from-primary/10', 'to-transparent', 'bg-surface-container-high');
+
+      const iconWrap = card.querySelector('.siren-icon-wrap');
+      if (iconWrap) iconWrap.className = 'siren-icon-wrap w-7 h-7 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0';
+      const previewBtn = card.querySelector('.preview-btn');
+      if (previewBtn) previewBtn.className = 'preview-btn w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary hover:bg-primary hover:text-on-primary transition-colors shrink-0';
 
       AppState.activeAudioPattern = card.dataset.siren || 'ambulance';
       const titleWrapper = card.querySelector('.siren-title-wrapper');
@@ -1987,7 +2180,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (titleWrapper) titleWrapper.appendChild(badge);
 
       const elSummary = document.getElementById('summaryAudioPattern');
-      if (elSummary) elSummary.textContent = `${AppState.activePatternName} • 100% Boost`;
+      if (elSummary) elSummary.textContent = `${AppState.activePatternName} • ${AppState.otaBypassDnd ? '100% Boost' : 'Volume Normal'}`;
     });
   });
 
