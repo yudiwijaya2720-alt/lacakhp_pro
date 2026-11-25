@@ -23,7 +23,7 @@ const AppState = {
   devices: [],
   kpi: { total: 34, online: 24, standby: 8, hilang: 2 },
   alerts: [],
-  currentStaffImei: localStorage.getItem('lacakhp_staff_imei') || '358912345678901',
+  currentStaffImei: localStorage.getItem('lacakhp_staff_imei') || '',
   dutyActive: localStorage.getItem('lacakhp_duty_active') === 'true',
   
   // Remote Command OTA State
@@ -167,9 +167,17 @@ const MOCK_DATA = {
   ]
 };
 
-AppState.devices = MOCK_DATA.devices;
-AppState.kpi = { ...MOCK_DATA.kpi };
-AppState.alerts = MOCK_DATA.recentAlerts;
+// Mode DEMO hanya jika URL backend GAS kosong. Jika ada URL, data 100% dari Google Sheets.
+AppState.isDemo = !AppState.gasUrl;
+if (AppState.isDemo) {
+  AppState.devices = MOCK_DATA.devices;
+  AppState.kpi = { ...MOCK_DATA.kpi };
+  AppState.alerts = MOCK_DATA.recentAlerts;
+} else {
+  AppState.devices = [];
+  AppState.kpi = { total: 0, online: 0, standby: 0, hilang: 0 };
+  AppState.alerts = [];
+}
 
 // ============================================================================
 // 3. REST API CLIENT (gas-pro-api ANTI-CORS PATTERN)
@@ -195,9 +203,10 @@ async function callApi(action, payload = {}) {
     updateBackendSyncIndicator('connected');
     return result;
   } catch (error) {
-    console.warn('API Error (fallback ke mock):', error);
+    console.warn('API Error:', error);
     updateBackendSyncIndicator('offline');
-    return handleMockApi(action, payload);
+    // Mode LIVE: jangan pakai data palsu, laporkan error apa adanya
+    return { success: false, message: 'Gagal terhubung ke server Google Apps Script. Periksa koneksi internet.' };
   } finally {
     AppState.isFetching = false;
   }
@@ -933,7 +942,7 @@ function renderMasterDeviceCards() {
         </div>
 
         <!-- Tactical Actions Buttons -->
-        <div class="grid grid-cols-3 gap-space-xs pt-1 ml-1">
+        <div class="grid grid-cols-4 gap-space-xs pt-1 ml-1">
           <button onclick="bukaRemoteCommandTarget('${d.imei}')" class="py-2 px-1 rounded-lg ${isHilang ? 'bg-error-container hover:bg-tertiary-container text-on-error-container' : 'bg-surface-container-high hover:bg-surface-container-highest text-rose-300'} font-label-md text-label-md flex items-center justify-center gap-1 shadow-sm transition-transform active:scale-95">
             <span class="material-symbols-outlined text-[16px]">volume_up</span>
             <span>${isHilang ? 'Sirene OTA' : 'Pusat OTA'}</span>
@@ -941,6 +950,10 @@ function renderMasterDeviceCards() {
           <button onclick="fokusRutePerangkat('${d.imei}')" class="py-2 px-1 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-primary-container font-label-md text-label-md flex items-center justify-center gap-1 transition-colors active:scale-95">
             <span class="material-symbols-outlined text-[16px]">route</span>
             <span>Rute GPS</span>
+          </button>
+          <button onclick="kirimLinkPelacakan('${d.imei}')" class="py-2 px-1 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-sky-300 font-label-md text-label-md flex items-center justify-center gap-1 transition-colors active:scale-95">
+            <span class="material-symbols-outlined text-[16px]">share_location</span>
+            <span>Link</span>
           </button>
           <a href="https://wa.me/${cleanWaNumber(d.noWa)}" target="_blank" class="py-2 px-1 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-secondary font-label-md text-label-md flex items-center justify-center gap-1 transition-colors active:scale-95 text-center">
             <span class="material-symbols-outlined text-[16px]">send</span>
@@ -1113,7 +1126,7 @@ function simulasiScanBarcode() {
 // 10. LAYAR KLIEN STAF (MOBILE AGENT PWA)
 // ============================================================================
 function renderStaffClientUI() {
-  const staff = AppState.devices.find(d => d.imei === AppState.currentStaffImei) || AppState.devices[0];
+  const staff = AppState.devices.find(d => d.imei === AppState.currentStaffImei);
   if (!staff) return;
 
   const elImei = document.getElementById('staff-imei-display');
@@ -1156,13 +1169,42 @@ function renderStaffClientUI() {
   }
 }
 
+// Posisi GPS terakhir yang benar-benar didapat dari HP (bukan koordinat palsu)
+AppState.lastFix = null;
+AppState.geoWatchId = null;
+
 function startStaffTracking() {
   stopStaffTracking();
-  kirimPingTelemetri();
+  if (!AppState.currentStaffImei) {
+    showToast('IMEI HP ini belum diketahui. Buka lewat link pelacakan dari admin atau login dengan IMEI.', 'error');
+    return;
+  }
+  if (!('geolocation' in navigator)) {
+    showToast('Browser ini tidak mendukung GPS.', 'error');
+    return;
+  }
+  // Pantau GPS terus-menerus
+  AppState.geoWatchId = navigator.geolocation.watchPosition(
+    pos => {
+      const first = !AppState.lastFix;
+      AppState.lastFix = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        acc: Math.round(pos.coords.accuracy || 0)
+      };
+      if (first) kirimPingTelemetri();
+    },
+    err => {
+      const pesan = err.code === 1
+        ? 'Izin lokasi DITOLAK. Buka pengaturan browser > Izin Situs > Lokasi > Izinkan, lalu muat ulang.'
+        : 'GPS belum mendapat sinyal. Pastikan Lokasi/GPS HP menyala dan coba di area terbuka.';
+      showToast(pesan, 'error');
+    },
+    { enableHighAccuracy: true, timeout: 20000, maximumAge: 10000 }
+  );
+  // Kirim posisi ke server setiap 15 detik
   AppState.watchId = setInterval(() => {
-    if (AppState.dutyActive) {
-      kirimPingTelemetri();
-    }
+    if (AppState.dutyActive) kirimPingTelemetri();
   }, 15000);
 }
 
@@ -1170,6 +1212,10 @@ function stopStaffTracking() {
   if (AppState.watchId) {
     clearInterval(AppState.watchId);
     AppState.watchId = null;
+  }
+  if (AppState.geoWatchId !== null && 'geolocation' in navigator) {
+    navigator.geolocation.clearWatch(AppState.geoWatchId);
+    AppState.geoWatchId = null;
   }
 }
 
@@ -1179,34 +1225,20 @@ function toggleStaffDuty() {
 
   if (AppState.dutyActive) {
     startStaffTracking();
-    showToast('Jam Tugas Dimulai. Transmisi koordinat GPS aktif setiap 15 detik.', 'success');
+    showToast('Pelacakan aktif. Biarkan halaman ini tetap terbuka agar lokasi terus terkirim.', 'success');
   } else {
     stopStaffTracking();
-    showToast('Jam Tugas Dihentikan. Transmisi GPS dinonaktifkan.', 'info');
+    showToast('Pelacakan dihentikan.', 'info');
   }
 
   renderStaffClientUI();
 }
 
 async function kirimPingTelemetri() {
-  let lat = -6.2118;
-  let lng = 106.8462;
-  let acc = 4;
-  let bat = 94;
-
-  if ('geolocation' in navigator) {
-    try {
-      const pos = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 6000
-        });
-      });
-      lat = pos.coords.latitude;
-      lng = pos.coords.longitude;
-      acc = Math.round(pos.coords.accuracy || 4);
-    } catch (e) {}
-  }
+  // Jangan kirim koordinat palsu: tunggu sampai GPS benar-benar dapat posisi
+  if (!AppState.lastFix || !AppState.currentStaffImei) return null;
+  const { lat, lng, acc } = AppState.lastFix;
+  let bat = 0;
 
   if ('getBattery' in navigator) {
     try {
@@ -1219,6 +1251,9 @@ async function kirimPingTelemetri() {
     imei: AppState.currentStaffImei,
     lat, lng, acc, bat
   });
+  if (!res || !res.success) {
+    showToast((res && res.message) || 'Gagal mengirim lokasi ke server.', 'error');
+  }
 
   const localDev = AppState.devices.find(d => d.imei === AppState.currentStaffImei);
   if (localDev) {
@@ -1331,12 +1366,49 @@ async function handleLoginSubmit(e) {
     if (res.role === 'STAFF') {
       AppState.currentStaffImei = res.imei;
       localStorage.setItem('lacakhp_staff_imei', res.imei);
-      navigateToTab('staff-client');
-    } else {
-      navigateToTab('live-tracking');
     }
+    terapkanPeranUser();
   } else {
     showToast(res.message || 'Login gagal', 'error');
+  }
+}
+
+// Login otomatis HP staf dari link ?imei=XXXXXXXXXXXXXXX
+async function loginStaffByImei(imei) {
+  const res = await callApi('login', { username: imei, password: '' });
+  if (res.success && res.role === 'STAFF') {
+    AppState.user = res;
+    AppState.currentStaffImei = res.imei;
+    localStorage.setItem('lacakhp_user', JSON.stringify(res));
+    localStorage.setItem('lacakhp_staff_imei', res.imei);
+    tutupHalamanLogin();
+    terapkanPeranUser();
+    // Langsung aktifkan pelacakan GPS (browser akan meminta izin lokasi)
+    if (!AppState.dutyActive) {
+      toggleStaffDuty();
+    } else {
+      startStaffTracking();
+    }
+  } else {
+    bukaHalamanLogin();
+    showToast(`IMEI ${imei} belum terdaftar di Master Perangkat. Hubungi admin.`, 'error');
+  }
+}
+
+// Atur tampilan sesuai peran: ADMIN lihat semua, STAFF hanya layar pengirim lokasi
+function terapkanPeranUser() {
+  const isStaff = AppState.user && AppState.user.role === 'STAFF';
+  document.querySelectorAll('[data-nav-tab]').forEach(btn => {
+    if (btn.dataset.navTab === 'staff-client') {
+      btn.style.display = '';
+    } else {
+      btn.style.display = isStaff ? 'none' : '';
+    }
+  });
+  if (isStaff) {
+    navigateToTab('staff-client');
+  } else {
+    navigateToTab('live-tracking');
   }
 }
 
@@ -1353,6 +1425,9 @@ function quickFillLogin(role) {
 }
 
 function logoutUser() {
+  stopStaffTracking();
+  AppState.dutyActive = false;
+  localStorage.setItem('lacakhp_duty_active', 'false');
   AppState.user = null;
   localStorage.removeItem('lacakhp_user');
   bukaHalamanLogin();
@@ -1404,6 +1479,7 @@ function cleanWaNumber(no) {
   if (!no) return '';
   let clean = String(no).replace(/[^0-9]/g, '');
   if (clean.startsWith('0')) clean = '62' + clean.slice(1);
+  else if (clean.startsWith('8')) clean = '62' + clean; // angka dari Sheets kehilangan 0 di depan
   return clean;
 }
 
@@ -1459,19 +1535,21 @@ document.addEventListener('DOMContentLoaded', () => {
   initLeafletMap();
   loadDashboardData();
 
-  if (!AppState.user) {
-    // Sesi default Admin Dispatcher agar Google Maps langsung tampil tanpa halangan login
-    AppState.user = {
-      role: 'ADMIN',
-      name: 'Capt. Raditya M. (Lead Dispatcher)',
-      token: 'session-demo'
-    };
-    localStorage.setItem('lacakhp_user', JSON.stringify(AppState.user));
-    tutupHalamanLogin();
-    navigateToTab('live-tracking');
+  // Buang sesi demo lama yang dulu dibuat otomatis
+  if (AppState.user && AppState.user.token === 'session-demo') {
+    AppState.user = null;
+    localStorage.removeItem('lacakhp_user');
+  }
+
+  const urlImei = (new URLSearchParams(window.location.search).get('imei') || '').replace(/\D/g, '');
+  if (urlImei) {
+    // Link pelacakan untuk HP staf: login otomatis sebagai STAFF berdasarkan IMEI
+    loginStaffByImei(urlImei);
+  } else if (!AppState.user) {
+    bukaHalamanLogin();
   } else {
     tutupHalamanLogin();
-    navigateToTab('live-tracking');
+    terapkanPeranUser();
   }
   
   // Pastikan render peta aktif
@@ -1485,7 +1563,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!AppState.isFetching) loadDashboardData();
   }, 15000);
 
-  if (AppState.dutyActive) {
+  if (AppState.dutyActive && AppState.user && AppState.user.role === 'STAFF' && !urlImei) {
     startStaffTracking();
   }
 
@@ -1715,6 +1793,9 @@ function renderMasterDeviceTable() {
             <button onclick="lacakDeviceById('${d.imei}')" title="Lacak di Peta" class="w-8 h-8 rounded-lg bg-surface-container hover:bg-primary-container hover:text-on-primary-container text-primary flex items-center justify-center transition-colors">
               <span class="material-symbols-outlined text-[16px]">near_me</span>
             </button>
+            <button onclick="kirimLinkPelacakan('${d.imei}')" title="Kirim Link Pelacakan ke HP ini (WhatsApp)" class="w-8 h-8 rounded-lg bg-surface-container hover:bg-sky-500 hover:text-white text-sky-300 flex items-center justify-center transition-colors">
+              <span class="material-symbols-outlined text-[16px]">share_location</span>
+            </button>
             <a href="https://wa.me/${waLink}" target="_blank" title="Kirim WhatsApp" class="w-8 h-8 rounded-lg bg-surface-container hover:bg-emerald-500 hover:text-white text-emerald-400 flex items-center justify-center transition-colors">
               <span class="material-symbols-outlined text-[16px]">chat</span>
             </a>
@@ -1730,6 +1811,22 @@ function renderMasterDeviceTable() {
 
 function filterDesktopTable() {
   renderMasterDeviceTable();
+}
+
+// Kirim link pelacakan ke HP staf via WhatsApp. HP staf cukup membuka link & mengizinkan lokasi.
+function kirimLinkPelacakan(imei) {
+  const d = AppState.devices.find(x => x.imei === imei);
+  if (!d) return;
+  const baseUrl = window.location.origin + window.location.pathname;
+  const link = `${baseUrl}?imei=${encodeURIComponent(imei)}`;
+  const pesan = `Halo ${d.nama}, buka link berikut di HP dinas Anda, lalu tekan IZINKAN saat diminta akses lokasi. Biarkan halaman tetap terbuka selama jam tugas.\n\n${link}`;
+  const wa = cleanWaNumber(d.noWa || '');
+  if (navigator.clipboard) navigator.clipboard.writeText(link).catch(() => {});
+  if (wa) {
+    window.open(`https://wa.me/${wa}?text=${encodeURIComponent(pesan)}`, '_blank');
+  } else {
+    showToast('Nomor WA kosong. Link pelacakan sudah disalin: ' + link, 'info');
+  }
 }
 
 // Lacak Device Spesifik di Peta Leaflet
