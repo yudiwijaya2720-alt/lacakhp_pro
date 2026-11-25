@@ -798,12 +798,17 @@ function getRiwayatRute(imei) {
 
   for (let i = 1; i < data.length; i++) {
     if (String(data[i][2]).trim() === target) {
+      const dt = data[i][1] ? new Date(data[i][1]) : null;
       points.push({
         lat: Number(data[i][4]),
         lng: Number(data[i][5]),
-        time: data[i][1] ? Utilities.formatDate(new Date(data[i][1]), 'Asia/Jakarta', 'HH:mm') : '-',
+        time: dt ? Utilities.formatDate(dt, 'Asia/Jakarta', 'HH:mm') : '-',
+        fullTime: dt ? Utilities.formatDate(dt, 'Asia/Jakarta', 'dd/MM/yyyy HH:mm:ss') : '-',
+        isoTime: dt ? dt.toISOString() : '',
         acc: Number(data[i][6]) || 0,
-        bat: Number(data[i][7]) || 0
+        bat: Number(data[i][7]) || 0,
+        status: String(data[i][8] || 'Online'),
+        note: String(data[i][9] || '')
       });
     }
   }

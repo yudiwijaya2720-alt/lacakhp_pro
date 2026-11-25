@@ -41,6 +41,17 @@ const AppState = {
   map: null,
   markers: {},
   routePolyline: null,
+  routeMap: null,
+  routeTileLayers: {},
+  activeRouteTileLayer: null,
+  routeLayerGroup: null,
+  routePlaybackMarker: null,
+  routeRawPoints: [],
+  routeProcessed: null,
+  routeTablePage: 1,
+  routePlaybackTimer: null,
+  routePlaybackIndex: 0,
+  routePlaybackSpeed: 2,
   audioCtx: null,
   sirenOscillator: null,
   previewAudioCtx: null,
@@ -315,6 +326,14 @@ function handleMockApi(action, payload) {
         MOCK_DATA.devices = MOCK_DATA.devices.filter(x => x.imei !== payload.imei);
         MOCK_DATA.kpi.total = MOCK_DATA.devices.length;
         resolve({ success: true, message: 'Perangkat IMEI ' + payload.imei + ' dihapus.' });
+      } else if (action === 'getRoute') {
+        const dev = MOCK_DATA.devices.find(x => x.imei === payload.imei);
+        const pts = dev && dev.lat && dev.lng ? [
+          { lat: dev.lat - 0.015, lng: dev.lng - 0.015, time: '08:00', fullTime: '25/11/2026 08:00:00', isoTime: new Date(Date.now() - 3600000 * 3).toISOString(), acc: 6, bat: 96, status: 'Online', note: 'Titik Awal' },
+          { lat: dev.lat - 0.007, lng: dev.lng - 0.005, time: '09:15', fullTime: '25/11/2026 09:15:00', isoTime: new Date(Date.now() - 3600000 * 1.5).toISOString(), acc: 5, bat: 78, status: 'Online', note: 'Transit' },
+          { lat: dev.lat, lng: dev.lng, time: '10:30', fullTime: '25/11/2026 10:30:00', isoTime: new Date().toISOString(), acc: dev.akurasi || 5, bat: dev.baterai || 50, status: dev.status, note: dev.lokasiDeskripsi || '' }
+        ] : [];
+        resolve({ success: true, points: pts });
       } else {
         resolve({ success: true });
       }
@@ -455,17 +474,50 @@ function navigateToTab(tabId) {
     targetView.style.display = 'block';
   }
 
-  // Update navbar active classes
+  // Update sidebar & mobile navbar active states (WCAG aria-current + classes)
   document.querySelectorAll('[data-nav-tab]').forEach(btn => {
     const isCurrent = btn.dataset.navTab === tabId;
-    btn.classList.toggle('bg-surface-container-high', isCurrent);
-    btn.classList.toggle('text-primary', isCurrent);
-    btn.classList.toggle('font-bold', isCurrent);
+    if (isCurrent) {
+      btn.setAttribute('aria-current', 'page');
+    } else {
+      btn.removeAttribute('aria-current');
+    }
+    if (btn.closest('#app-sidebar')) {
+      btn.classList.toggle('bg-surface-container-high', isCurrent);
+      btn.classList.toggle('text-primary', isCurrent);
+      btn.classList.toggle('font-semibold', isCurrent);
+      btn.classList.toggle('border-l-2', isCurrent);
+      btn.classList.toggle('border-primary-container', isCurrent);
+    } else {
+      btn.classList.toggle('text-primary', isCurrent);
+      btn.classList.toggle('font-bold', isCurrent);
+    }
   });
+
+  // Update Topbar Breadcrumb
+  const breadcrumbNames = {
+    'live-tracking': 'Command Console • Peta Langsung',
+    'master-devices': 'Master Perangkat',
+    'route-history': 'Riwayat Rute & Breadcrumb Trails',
+    'signal-recovery': 'Insiden Hilang & Recovery',
+    'remote-command': 'Pusat Intervensi OTA',
+    'staff-client': 'Layar Agen HP Staf'
+  };
+  const bcEl = document.getElementById('topbar-breadcrumb');
+  if (bcEl) bcEl.textContent = breadcrumbNames[tabId] || 'Command Console';
 
   // Re-render Leaflet Map if visible
   if (tabId === 'live-tracking' && AppState.map) {
     setTimeout(() => AppState.map.invalidateSize(), 150);
+  }
+
+  // Khusus tab Riwayat Rute
+  if (tabId === 'route-history') {
+    initRouteHistoryMap();
+    setTimeout(() => {
+      if (AppState.routeMap) AppState.routeMap.invalidateSize();
+    }, 180);
+    muatRiwayatRute();
   }
 
   // Khusus tab Klien Staf
@@ -711,6 +763,13 @@ function fokusRutePerangkat(imei) {
   showToast(`Memusatkan peta ke: ${d.nama} (${d.imei})`, 'info');
 }
 
+function bukaRiwayatRuteTarget(imei) {
+  AppState.selectedTargetImei = imei;
+  const sel = document.getElementById('routeHistoryDeviceSelect');
+  if (sel) sel.value = imei;
+  navigateToTab('route-history');
+}
+
 // ============================================================================
 // 7. RENDER DASHBOARD & MASTER FEED (Stitch Card Layout)
 // ============================================================================
@@ -738,6 +797,9 @@ async function loadDashboardData() {
     renderRemoteCommandUI();
     renderSignalRecoveryUI();
     renderStaffClientUI();
+    if (AppState.activeTab === 'route-history' && !AppState.routePlaybackTimer) {
+      muatRiwayatRute();
+    }
   }
 }
 
@@ -771,6 +833,12 @@ function renderKPIStats() {
   if (badgeInsiden) {
     badgeInsiden.textContent = AppState.kpi.hilang;
     badgeInsiden.style.display = AppState.kpi.hilang > 0 ? 'inline-flex' : 'none';
+  }
+
+  const sidebarBadge = document.getElementById('sidebar-badge-hilang');
+  if (sidebarBadge) {
+    sidebarBadge.textContent = AppState.kpi.hilang;
+    sidebarBadge.classList.toggle('hidden', !(AppState.kpi.hilang > 0));
   }
 }
 
@@ -816,6 +884,9 @@ function renderLiveTelemetryTable() {
           </button>
           <button onclick="kirimLinkPelacakan('${device.imei}')" class="px-2.5 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 text-xs font-medium mr-1 transition" title="Kirim Link Pelacakan via WhatsApp">
             Link GPS
+          </button>
+          <button onclick="bukaRiwayatRuteTarget('${device.imei}')" class="px-2.5 py-1 rounded bg-surface-container-high hover:bg-surface-bright text-amber-300 text-xs font-medium mr-1 transition" title="Buka Riwayat Rute & Breadcrumb Trails">
+            Riwayat
           </button>
           <button onclick="fokusRutePerangkat('${device.imei}')" class="px-2.5 py-1 rounded bg-surface-container-high hover:bg-surface-bright text-primary text-xs font-medium transition">
             Lihat Jejak
@@ -1640,11 +1711,30 @@ async function loginStaffByImei(imei) {
 function terapkanPeranUser() {
   const isStaff = AppState.user && AppState.user.role === 'STAFF';
   const navUser = document.getElementById('navbar-user-label');
+  const sideName = document.getElementById('sidebar-user-name');
+  const sideRole = document.getElementById('sidebar-user-role');
+  const sidebar = document.getElementById('app-sidebar');
+  const shell = document.getElementById('app-shell-content');
+
   if (navUser) {
     navUser.textContent = AppState.user
       ? `${AppState.user.name || AppState.user.imei} (${AppState.user.role})`
       : '-';
   }
+  if (sideName) {
+    sideName.textContent = AppState.user ? (AppState.user.name || AppState.user.imei) : 'Belum Login';
+  }
+  if (sideRole) {
+    sideRole.textContent = isStaff ? `Agen Lapangan • ${AppState.user.imei || ''}` : 'Pusat Ops Regional';
+  }
+  if (sidebar) {
+    sidebar.classList.toggle('lg:flex', !isStaff);
+    sidebar.style.display = isStaff ? 'none' : '';
+  }
+  if (shell) {
+    shell.classList.toggle('lg:pl-[248px]', !isStaff);
+  }
+
   document.querySelectorAll('[data-nav-tab]').forEach(btn => {
     if (btn.dataset.navTab === 'staff-client') {
       btn.style.display = '';
@@ -1657,6 +1747,30 @@ function terapkanPeranUser() {
   } else {
     navigateToTab('live-tracking');
   }
+}
+
+function handleGlobalSearchKey(event) {
+  if (event.key !== 'Enter') return;
+  const query = (event.target.value || '').trim().toLowerCase();
+  if (!query) return;
+
+  const exact = AppState.devices.find(d =>
+    d.imei.toLowerCase() === query || d.nama.toLowerCase() === query
+  );
+  if (exact) {
+    AppState.selectedTargetImei = exact.imei;
+    fokusRutePerangkat(exact.imei);
+    return;
+  }
+
+  navigateToTab('master-devices');
+  const desktopSearch = document.getElementById('desktopTableSearch');
+  const mobileSearch = document.getElementById('deviceSearchInput');
+  if (desktopSearch) desktopSearch.value = query;
+  if (mobileSearch) mobileSearch.value = query;
+  renderMasterDeviceTable();
+  renderMasterDeviceCards();
+  showToast(`Menampilkan hasil pencarian untuk: "${query}"`, 'info');
 }
 
 function quickFillLogin(role) {
@@ -1699,17 +1813,20 @@ function tutupHalamanLogin() {
 function updateBackendSyncIndicator(status) {
   const indicator = document.getElementById('backend-sync-indicator');
   const text = document.getElementById('backend-sync-text');
-  if (!indicator || !text) return;
+  const sideBadge = document.getElementById('sidebar-sync-badge');
 
   if (status === 'connected') {
-    indicator.className = 'w-2 h-2 rounded-full bg-emerald-400';
-    text.textContent = 'GAS Backend Terhubung';
+    if (indicator) indicator.className = 'w-2 h-2 rounded-full bg-emerald-400';
+    if (text) text.textContent = 'GAS Backend Terhubung';
+    if (sideBadge) sideBadge.textContent = '24/7 LIVE';
   } else if (status === 'syncing') {
-    indicator.className = 'w-2 h-2 rounded-full bg-sky-400 animate-ping';
-    text.textContent = 'Menyinkronkan...';
+    if (indicator) indicator.className = 'w-2 h-2 rounded-full bg-sky-400 animate-ping';
+    if (text) text.textContent = 'Menyinkronkan...';
+    if (sideBadge) sideBadge.textContent = 'SYNCING...';
   } else {
-    indicator.className = 'w-2 h-2 rounded-full bg-amber-400';
-    text.textContent = 'Simulasi Lokal (Demo)';
+    if (indicator) indicator.className = 'w-2 h-2 rounded-full bg-amber-400';
+    if (text) text.textContent = AppState.isDemo ? 'Simulasi Lokal (Demo)' : 'Koneksi Terputus';
+    if (sideBadge) sideBadge.textContent = AppState.isDemo ? 'DEMO' : 'OFFLINE';
   }
 }
 
@@ -2039,6 +2156,9 @@ function renderMasterDeviceTable() {
           <div class="flex items-center justify-end gap-1.5">
             <button onclick="lacakDeviceById('${d.imei}')" title="Lacak di Peta" class="w-8 h-8 rounded-lg bg-surface-container hover:bg-primary-container hover:text-on-primary-container text-primary flex items-center justify-center transition-colors">
               <span class="material-symbols-outlined text-[16px]">near_me</span>
+            </button>
+            <button onclick="bukaRiwayatRuteTarget('${d.imei}')" title="Lihat Riwayat Rute" class="w-8 h-8 rounded-lg bg-surface-container hover:bg-amber-500 hover:text-on-primary text-amber-300 flex items-center justify-center transition-colors">
+              <span class="material-symbols-outlined text-[16px]">route</span>
             </button>
             <button onclick="kirimLinkPelacakan('${d.imei}')" title="Kirim Link Pelacakan ke HP ini (WhatsApp)" class="w-8 h-8 rounded-lg bg-surface-container hover:bg-sky-500 hover:text-white text-sky-300 flex items-center justify-center transition-colors">
               <span class="material-symbols-outlined text-[16px]">share_location</span>
@@ -2650,4 +2770,577 @@ function appendDesktopSirenLog(timestamp, tone, target) {
 
   tbody.insertBefore(newRow, tbody.firstChild);
   setTimeout(() => newRow.classList.remove('animate-pulse'), 4000);
+}
+
+// ============================================================================
+// 14. MODUL-03: RIWAYAT RUTE & BREADCRUMB TRAILS ENGINE (LEAFLET + GAS LIVE)
+// ============================================================================
+function initRouteHistoryMap() {
+  const container = document.getElementById('route-history-map');
+  if (!container || typeof L === 'undefined') return;
+  if (AppState.routeMap) {
+    setTimeout(() => AppState.routeMap.invalidateSize(), 120);
+    return;
+  }
+
+  AppState.routeMap = L.map('route-history-map', {
+    zoomControl: false,
+    attributionControl: false,
+    fadeAnimation: true
+  }).setView([-6.2118, 106.8462], 12);
+
+  AppState.routeTileLayers.dark = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    className: 'cyber-dark-tiles',
+    attribution: '© OpenStreetMap'
+  });
+
+  AppState.routeTileLayers.satellite = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+    attribution: '© Google Satelit'
+  });
+
+  AppState.routeTileLayers.topo = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+    attribution: '© Google Maps'
+  });
+
+  AppState.activeRouteTileLayer = AppState.routeTileLayers.dark;
+  AppState.activeRouteTileLayer.addTo(AppState.routeMap);
+  AppState.routeLayerGroup = L.layerGroup().addTo(AppState.routeMap);
+
+  const updateCenterLabel = () => {
+    const el = document.getElementById('rh-map-center');
+    if (el && AppState.routeMap) {
+      const c = AppState.routeMap.getCenter();
+      el.textContent = `Sumbu Peta: ${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}`;
+    }
+  };
+  AppState.routeMap.on('moveend', updateCenterLabel);
+  updateCenterLabel();
+}
+
+function switchRouteMapLayer(layerKey) {
+  if (!AppState.routeMap || !AppState.routeTileLayers[layerKey]) return;
+  if (AppState.activeRouteTileLayer) {
+    AppState.routeMap.removeLayer(AppState.activeRouteTileLayer);
+  }
+  AppState.activeRouteTileLayer = AppState.routeTileLayers[layerKey];
+  AppState.activeRouteTileLayer.addTo(AppState.routeMap);
+
+  ['dark', 'satellite', 'topo'].forEach(k => {
+    const btn = document.getElementById(`btn-rh-layer-${k}`);
+    if (!btn) return;
+    btn.className = k === layerKey
+      ? 'px-space-sm py-1 rounded bg-primary-container text-on-primary-container font-label-sm text-label-sm font-semibold'
+      : 'px-space-sm py-1 rounded text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm';
+  });
+}
+
+function toggleRouteMapFullscreen() {
+  const wrap = document.getElementById('route-history-map-wrap');
+  if (!wrap) return;
+  if (!document.fullscreenElement) {
+    wrap.requestFullscreen?.().catch(() => {});
+  } else {
+    document.exitFullscreen?.().catch(() => {});
+  }
+  setTimeout(() => AppState.routeMap?.invalidateSize(), 250);
+}
+
+function recenterRouteMap() {
+  if (!AppState.routeMap || !AppState.routeProcessed) return;
+  const pts = AppState.routeProcessed.points;
+  if (!pts.length) return;
+  if (pts.length === 1) {
+    AppState.routeMap.setView([pts[0].lat, pts[0].lng], 15, { animate: true });
+  } else {
+    AppState.routeMap.fitBounds(pts.map(p => [p.lat, p.lng]), { padding: [45, 45], maxZoom: 16 });
+  }
+}
+
+function hitungJarakKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatDurasiJamMenit(totalMenit) {
+  const mins = Math.max(0, Math.round(totalMenit));
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+async function muatRiwayatRute() {
+  stopRoutePlayback();
+  initRouteHistoryMap();
+
+  const sel = document.getElementById('routeHistoryDeviceSelect');
+  const imei = (sel && sel.value) || AppState.selectedTargetImei || AppState.devices[0]?.imei || '';
+  if (!imei) {
+    AppState.routeRawPoints = [];
+    AppState.routeProcessed = { points: [], stops: [], totalKm: 0, activeMinutes: 0, avgSpeed: 0, totalStopMinutes: 0, avgAcc: 0 };
+    renderRouteHistoryVisuals();
+    return;
+  }
+
+  AppState.selectedTargetImei = imei;
+  if (sel && sel.value !== imei) sel.value = imei;
+
+  const device = AppState.devices.find(d => d.imei === imei);
+  const badge = document.getElementById('rh-device-status-badge');
+  if (badge && device) {
+    badge.textContent = `${device.status} • ${device.baterai}%`;
+    badge.className = `font-code-tabular text-label-sm ${device.status === 'Hilang' ? 'text-error font-bold' : (device.status === 'Online' ? 'text-emerald-400' : 'text-amber-300')}`;
+  }
+
+  const res = await callApi('getRoute', { imei });
+  let points = (res && res.success && Array.isArray(res.points)) ? res.points : [];
+  points = points.filter(p => Number(p.lat) !== 0 && Number(p.lng) !== 0);
+
+  // Jika log riwayat masih kosong tapi perangkat punya koordinat terakhir di Master Sheet
+  if (points.length === 0 && device && Number(device.lat) !== 0 && Number(device.lng) !== 0) {
+    points = [{
+      lat: Number(device.lat),
+      lng: Number(device.lng),
+      time: device.lastSeenFormatted || device.lastSeenRelative || '-',
+      fullTime: device.lastSeenFormatted || '-',
+      isoTime: '',
+      acc: Number(device.akurasi) || 0,
+      bat: Number(device.baterai) || 0,
+      status: device.status || 'Online',
+      note: 'Posisi Terkini (Master Sheet)'
+    }];
+  }
+
+  // Filter rentang tanggal jika diisi & titik memiliki isoTime
+  const startVal = document.getElementById('route-start-date')?.value;
+  const endVal = document.getElementById('route-end-date')?.value;
+  if (startVal || endVal) {
+    const startMs = startVal ? new Date(startVal).getTime() : -Infinity;
+    const endMs = endVal ? new Date(endVal).getTime() : Infinity;
+    points = points.filter(p => {
+      if (!p.isoTime) return true;
+      const t = new Date(p.isoTime).getTime();
+      return t >= startMs && t <= endMs;
+    });
+  }
+
+  AppState.routeRawPoints = points;
+  AppState.routeTablePage = 1;
+  AppState.routeProcessed = prosesAnalitikRute(points);
+  renderRouteHistoryVisuals();
+}
+
+function prosesAnalitikRute(rawPoints) {
+  let totalKm = 0;
+  let accSum = 0;
+  const points = rawPoints.map((p, idx) => {
+    const lat = Number(p.lat);
+    const lng = Number(p.lng);
+    const acc = Number(p.acc) || 0;
+    const bat = Number(p.bat) || 0;
+    const ms = p.isoTime ? new Date(p.isoTime).getTime() : null;
+    accSum += acc;
+
+    let distKm = 0;
+    let speedKmh = 0;
+    let deltaMin = 0;
+    if (idx > 0) {
+      const prev = rawPoints[idx - 1];
+      distKm = hitungJarakKm(Number(prev.lat), Number(prev.lng), lat, lng);
+      totalKm += distKm;
+      if (ms && prev.isoTime) {
+        deltaMin = Math.max(0.1, (ms - new Date(prev.isoTime).getTime()) / 60000);
+        speedKmh = deltaMin > 0 ? Math.min(180, distKm / (deltaMin / 60)) : 0;
+      }
+    }
+
+    return {
+      idx,
+      lat,
+      lng,
+      acc,
+      bat,
+      time: p.time || '-',
+      fullTime: p.fullTime || p.time || '-',
+      isoTime: p.isoTime || '',
+      ms,
+      status: p.status || 'Online',
+      note: p.note || '',
+      distKm,
+      speedKmh: Math.round(speedKmh)
+    };
+  });
+
+  // Deteksi Stop Points: kelompok berurutan dalam radius 60m (>= 0.06 km) selama >= 10 menit
+  const stops = [];
+  let i = 0;
+  while (i < points.length) {
+    let j = i;
+    while (j + 1 < points.length && hitungJarakKm(points[i].lat, points[i].lng, points[j + 1].lat, points[j + 1].lng) <= 0.06) {
+      j++;
+    }
+    if (j > i && points[i].ms && points[j].ms) {
+      const durMin = Math.round((points[j].ms - points[i].ms) / 60000);
+      if (durMin >= 10) {
+        stops.push({
+          stopNumber: stops.length + 1,
+          startIdx: i,
+          endIdx: j,
+          lat: points[i].lat,
+          lng: points[i].lng,
+          startTime: points[i].time,
+          endTime: points[j].time,
+          durationMin: durMin,
+          bat: points[j].bat
+        });
+      }
+    }
+    i = j + 1;
+  }
+
+  const totalStopMinutes = stops.reduce((s, x) => s + x.durationMin, 0);
+  let totalSpanMin = 0;
+  if (points.length >= 2 && points[0].ms && points[points.length - 1].ms) {
+    totalSpanMin = Math.max(0, (points[points.length - 1].ms - points[0].ms) / 60000);
+  }
+  const activeMinutes = Math.max(0, totalSpanMin - totalStopMinutes);
+  const avgSpeed = activeMinutes > 0 ? (totalKm / (activeMinutes / 60)) : 0;
+  const avgAcc = points.length ? (accSum / points.length) : 0;
+
+  return {
+    points,
+    stops,
+    totalKm,
+    activeMinutes,
+    avgSpeed,
+    totalStopMinutes,
+    avgAcc
+  };
+}
+
+function renderRouteHistoryVisuals() {
+  const data = AppState.routeProcessed || { points: [], stops: [], totalKm: 0, activeMinutes: 0, avgSpeed: 0, totalStopMinutes: 0, avgAcc: 0 };
+  const showStops = document.getElementById('chk-route-stops')?.checked !== false;
+  const showPolyline = document.getElementById('chk-route-polyline')?.checked !== false;
+  const showAccuracy = document.getElementById('chk-route-accuracy')?.checked !== false;
+  const hideIdle = document.getElementById('chk-route-hide-idle')?.checked === true;
+
+  const device = AppState.devices.find(d => d.imei === AppState.selectedTargetImei);
+  const visiblePoints = hideIdle
+    ? data.points.filter((p, idx) => idx === 0 || idx === data.points.length - 1 || p.speedKmh >= 2)
+    : data.points;
+
+  // Update Header & 4 KPI Cards
+  const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setText('rh-corridor-label', device ? `TARGET: ${device.nama.toUpperCase()} (${device.imei})` : 'TARGET: -');
+  setText('rh-kpi-distance', data.totalKm.toFixed(1));
+  setText('rh-kpi-distance-sub', data.points.length > 1 ? `${data.points.length} Segmen GPS` : (data.points.length === 1 ? '1 Posisi Terakhir' : 'Belum Ada Data'));
+  setText('rh-kpi-duration', formatDurasiJamMenit(data.activeMinutes));
+  setText('rh-kpi-speed', `${Math.round(data.avgSpeed)} km/jam`);
+  setText('rh-kpi-stops', String(data.stops.length));
+  setText('rh-kpi-stop-duration', `${data.totalStopMinutes} Mnt`);
+  setText('rh-kpi-accuracy', `±${data.avgAcc.toFixed(1)}`);
+  setText('rh-kpi-points-sub', `${data.points.length} Titik GPS`);
+
+  // Empty overlay
+  const emptyOverlay = document.getElementById('rh-map-empty');
+  if (emptyOverlay) emptyOverlay.classList.toggle('hidden', visiblePoints.length > 0);
+
+  // Render Leaflet Map Layers
+  if (AppState.routeMap && AppState.routeLayerGroup) {
+    AppState.routeLayerGroup.clearLayers();
+    AppState.routePlaybackMarker = null;
+
+    if (visiblePoints.length > 0) {
+      if (showPolyline && visiblePoints.length > 1) {
+        L.polyline(visiblePoints.map(p => [p.lat, p.lng]), {
+          color: '#38bdf8',
+          weight: 4,
+          opacity: 0.9
+        }).addTo(AppState.routeLayerGroup);
+      }
+
+      if (showAccuracy) {
+        visiblePoints.forEach((p, idx) => {
+          if (idx === 0 || idx === visiblePoints.length - 1 || idx % 3 === 0) {
+            L.circle([p.lat, p.lng], {
+              radius: Math.max(15, p.acc || 20),
+              color: idx === visiblePoints.length - 1 ? '#f43f5e' : '#38bdf8',
+              weight: 1,
+              opacity: 0.35,
+              fillOpacity: 0.08
+            }).addTo(AppState.routeLayerGroup);
+          }
+        });
+      }
+
+      // Origin Marker
+      const origin = visiblePoints[0];
+      const originMarker = L.marker([origin.lat, origin.lng], {
+        icon: L.divIcon({
+          className: '',
+          html: `<div class="flex flex-col items-center"><div class="route-marker-pill mb-1">${escapeHtml(origin.time)} • Awal</div><div class="route-origin-pin"><span class="material-symbols-outlined text-[15px]">flag</span></div></div>`,
+          iconSize: [110, 48],
+          iconAnchor: [55, 42]
+        })
+      }).addTo(AppState.routeLayerGroup);
+      originMarker.bindPopup(`<b>Titik Awal (${escapeHtml(origin.fullTime)})</b><br>Koordinat: ${origin.lat.toFixed(5)}, ${origin.lng.toFixed(5)}<br>Baterai: ${origin.bat}%`);
+
+      // Stop Points Markers
+      if (showStops) {
+        data.stops.forEach(s => {
+          const m = L.marker([s.lat, s.lng], {
+            icon: L.divIcon({
+              className: '',
+              html: `<div class="flex flex-col items-center"><div class="route-marker-pill mb-1" style="border-color:rgba(245,158,11,0.6);color:#fcd34d;">Stop #${s.stopNumber} (${s.durationMin} mnt)</div><div class="route-stop-pin">${s.stopNumber}</div></div>`,
+              iconSize: [130, 46],
+              iconAnchor: [65, 40]
+            })
+          }).addTo(AppState.routeLayerGroup);
+          m.bindPopup(`<b>Stop #${s.stopNumber} (${s.durationMin} Menit)</b><br>${escapeHtml(s.startTime)} - ${escapeHtml(s.endTime)}<br>Baterai: ${s.bat}%`);
+        });
+      }
+
+      // Latest Point Marker
+      const latest = visiblePoints[visiblePoints.length - 1];
+      const latestMarker = L.marker([latest.lat, latest.lng], {
+        icon: L.divIcon({
+          className: '',
+          html: `<div class="flex flex-col items-center"><div class="route-marker-pill mb-1" style="border-color:rgba(244,63,94,0.7);color:#fda4af;">${escapeHtml(latest.time)} • TERKINI</div><div class="route-latest-pin"><span class="material-symbols-outlined text-[16px]">cell_tower</span></div></div>`,
+          iconSize: [140, 50],
+          iconAnchor: [70, 44]
+        })
+      }).addTo(AppState.routeLayerGroup);
+      latestMarker.bindPopup(`<b>Posisi Terkini (${escapeHtml(latest.fullTime)})</b><br>${latest.lat.toFixed(5)}, ${latest.lng.toFixed(5)}<br>Akurasi: ±${latest.acc}m • Baterai: ${latest.bat}%`);
+
+      recenterRouteMap();
+    }
+  }
+
+  // Update Playback Bar
+  const slider = document.getElementById('rh-playback-slider');
+  if (slider) {
+    slider.max = Math.max(0, visiblePoints.length - 1);
+    slider.value = Math.max(0, visiblePoints.length - 1);
+  }
+  AppState.routePlaybackIndex = Math.max(0, visiblePoints.length - 1);
+  setText('rh-time-start', visiblePoints.length ? visiblePoints[0].time : '--:--');
+  setText('rh-time-end', visiblePoints.length ? visiblePoints[visiblePoints.length - 1].time : '--:--');
+  setText('rh-playback-status', visiblePoints.length
+    ? `${visiblePoints[visiblePoints.length - 1].fullTime} (Waypoint ${visiblePoints.length} / ${visiblePoints.length})`
+    : 'Belum ada waypoint');
+
+  // Render Timeline (Terbaru di atas)
+  const timeline = document.getElementById('rh-timeline-list');
+  setText('rh-segments-count', `${visiblePoints.length} Titik`);
+  if (timeline) {
+    if (!visiblePoints.length) {
+      timeline.innerHTML = '<div class="py-8 text-center text-xs text-outline">Belum ada titik riwayat GPS untuk perangkat ini.</div>';
+    } else {
+      const reversed = [...visiblePoints].reverse();
+      timeline.innerHTML = reversed.slice(0, 40).map((p, rIdx) => {
+        const isLatest = rIdx === 0;
+        const stopInfo = data.stops.find(s => p.idx >= s.startIdx && p.idx <= s.endIdx);
+        const borderClass = isLatest ? 'border-error' : (stopInfo ? 'border-amber-400' : 'border-primary-container');
+        const badgeHtml = isLatest
+          ? `<span class="px-space-xs py-0.5 rounded bg-error-container text-on-error-container font-code-tabular text-label-sm font-bold">${escapeHtml(p.time)} (TERKINI)</span>`
+          : (stopInfo
+            ? `<span class="px-space-xs py-0.5 rounded bg-amber-400/15 text-amber-300 font-code-tabular text-label-sm font-bold">Stop #${stopInfo.stopNumber} (${stopInfo.durationMin} mnt) • ${escapeHtml(p.time)}</span>`
+            : `<span class="px-space-xs py-0.5 rounded bg-primary-container/20 text-primary font-code-tabular text-label-sm font-semibold">${escapeHtml(p.time)} • Bergerak ${p.speedKmh} km/j</span>`);
+
+        return `
+          <div onclick="fokusTitikRiwayat(${p.idx})" class="bg-surface-container rounded-lg p-space-sm flex flex-col gap-1.5 border-l-2 ${borderClass} hover:bg-surface-variant transition-colors cursor-pointer">
+            <div class="flex items-center justify-between gap-2">
+              ${badgeHtml}
+              <span class="text-primary font-label-sm text-label-sm font-semibold">Fokus Peta →</span>
+            </div>
+            <div class="font-code-tabular text-xs text-on-surface font-semibold">${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</div>
+            <div class="flex items-center justify-between text-[11px] text-on-surface-variant">
+              <span>Akurasi: <strong class="text-emerald-400">±${p.acc}m</strong> • ${escapeHtml(p.note || p.status)}</span>
+              <span>Baterai: <strong class="${p.bat < 20 ? 'text-error' : 'text-on-surface'}">${p.bat}%</strong></span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  renderRouteRawTable(visiblePoints);
+}
+
+function renderRouteRawTable(pointsList) {
+  const pts = pointsList || (AppState.routeProcessed ? AppState.routeProcessed.points : []);
+  const total = pts.length;
+  const pageSize = 10;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  if (AppState.routeTablePage > totalPages) AppState.routeTablePage = totalPages;
+  if (AppState.routeTablePage < 1) AppState.routeTablePage = 1;
+
+  const reversed = [...pts].reverse();
+  const start = (AppState.routeTablePage - 1) * pageSize;
+  const slice = reversed.slice(start, start + pageSize);
+
+  const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setText('rh-log-total', `Total ${total} Baris Log Terbaca`);
+  setText('rh-page-summary', `Menampilkan ${slice.length} dari ${total} titik terekam`);
+  setText('rh-page-indicator', `Hal ${AppState.routeTablePage} / ${totalPages}`);
+
+  const tbody = document.getElementById('rh-raw-tbody');
+  if (!tbody) return;
+  if (!slice.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-xs text-outline">Belum ada data log pelacakan untuk perangkat ini.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = slice.map((p, idx) => `
+    <tr class="hover:bg-surface-container transition-colors ${idx === 0 && AppState.routeTablePage === 1 ? 'bg-error-container/10' : ''}">
+      <td class="py-2.5 px-space-md font-code-tabular ${idx === 0 && AppState.routeTablePage === 1 ? 'text-error font-bold' : 'text-on-surface'} whitespace-nowrap">${escapeHtml(p.fullTime)}</td>
+      <td class="py-2.5 px-space-md font-code-tabular text-on-surface whitespace-nowrap">${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</td>
+      <td class="py-2.5 px-space-md whitespace-nowrap"><span class="px-space-xs py-0.5 rounded bg-emerald-400/10 text-emerald-400 font-code-tabular text-label-sm font-semibold">±${p.acc}m</span></td>
+      <td class="py-2.5 px-space-md font-code-tabular ${p.bat < 20 ? 'text-error font-semibold' : 'text-on-surface'} whitespace-nowrap">${p.bat}%</td>
+      <td class="py-2.5 px-space-md font-code-tabular text-primary whitespace-nowrap">${p.speedKmh} km/jam</td>
+      <td class="py-2.5 px-space-md text-on-surface-variant max-w-xs truncate">${escapeHtml(p.note || p.status)}</td>
+      <td class="py-2.5 px-space-md text-right whitespace-nowrap">
+        <button onclick="salinTeks('${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}', 'Koordinat')" class="h-7 px-2 rounded bg-surface-container-high text-primary hover:bg-primary hover:text-on-primary font-label-sm text-label-sm transition-colors mr-1" type="button">Salin Koor</button>
+        <button onclick="fokusTitikRiwayat(${p.idx})" class="h-7 px-2 rounded bg-surface-container-high text-on-surface hover:bg-surface-bright font-label-sm text-label-sm transition-colors" type="button">Peta</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function changeRouteTablePage(delta) {
+  AppState.routeTablePage += delta;
+  renderRouteRawTable();
+}
+
+function toggleRouteRawTable() {
+  const el = document.getElementById('raw-telemetry-container');
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function fokusTitikRiwayat(idx) {
+  if (!AppState.routeMap || !AppState.routeProcessed) return;
+  const p = AppState.routeProcessed.points.find(x => x.idx === idx);
+  if (!p) return;
+  AppState.routeMap.setView([p.lat, p.lng], 16, { animate: true });
+  seekRoutePlayback(idx);
+}
+
+function seekRoutePlayback(val) {
+  if (!AppState.routeProcessed || !AppState.routeProcessed.points.length) return;
+  const pts = AppState.routeProcessed.points;
+  const idx = Math.max(0, Math.min(pts.length - 1, parseInt(val, 10) || 0));
+  AppState.routePlaybackIndex = idx;
+  const p = pts[idx];
+
+  const slider = document.getElementById('rh-playback-slider');
+  if (slider) slider.value = idx;
+  const statusEl = document.getElementById('rh-playback-status');
+  if (statusEl) statusEl.textContent = `${p.fullTime} (Waypoint ${idx + 1} / ${pts.length})`;
+
+  if (AppState.routeMap && AppState.routeLayerGroup) {
+    if (!AppState.routePlaybackMarker) {
+      AppState.routePlaybackMarker = L.marker([p.lat, p.lng], {
+        icon: L.divIcon({
+          className: '',
+          html: '<div class="route-playback-pin"></div>',
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
+        }),
+        zIndexOffset: 900
+      }).addTo(AppState.routeLayerGroup);
+    } else {
+      AppState.routePlaybackMarker.setLatLng([p.lat, p.lng]);
+    }
+    AppState.routePlaybackMarker.bindPopup(`<b>Playback (${escapeHtml(p.fullTime)})</b><br>Laju: ${p.speedKmh} km/j • Baterai: ${p.bat}%`);
+  }
+}
+
+function toggleRoutePlayback() {
+  if (!AppState.routeProcessed || AppState.routeProcessed.points.length < 2) {
+    showToast('Minimal butuh 2 titik GPS untuk simulasi pemutaran rute.', 'info');
+    return;
+  }
+  const btn = document.getElementById('btn-play-sim');
+  const icon = btn?.querySelector('.material-symbols-outlined');
+  if (AppState.routePlaybackTimer) {
+    stopRoutePlayback();
+    return;
+  }
+  if (AppState.routePlaybackIndex >= AppState.routeProcessed.points.length - 1) {
+    AppState.routePlaybackIndex = 0;
+  }
+  if (icon) icon.textContent = 'pause';
+  const intervalMs = Math.max(150, Math.round(900 / AppState.routePlaybackSpeed));
+  AppState.routePlaybackTimer = setInterval(() => {
+    const pts = AppState.routeProcessed.points;
+    if (AppState.routePlaybackIndex >= pts.length - 1) {
+      stopRoutePlayback();
+      return;
+    }
+    seekRoutePlayback(AppState.routePlaybackIndex + 1);
+  }, intervalMs);
+}
+
+function stopRoutePlayback() {
+  if (AppState.routePlaybackTimer) {
+    clearInterval(AppState.routePlaybackTimer);
+    AppState.routePlaybackTimer = null;
+  }
+  const icon = document.querySelector('#btn-play-sim .material-symbols-outlined');
+  if (icon) icon.textContent = 'play_arrow';
+}
+
+function resetRoutePlayback() {
+  stopRoutePlayback();
+  seekRoutePlayback(0);
+}
+
+function setRoutePlaybackSpeed(speed) {
+  AppState.routePlaybackSpeed = speed;
+  [1, 2, 4].forEach(s => {
+    const btn = document.getElementById(`btn-rh-speed-${s}`);
+    if (!btn) return;
+    btn.className = s === speed
+      ? 'px-2 py-1 rounded bg-primary-container text-on-primary-container font-code-tabular text-label-sm font-bold'
+      : 'px-2 py-1 rounded bg-surface-container-high text-on-surface-variant hover:text-on-surface font-code-tabular text-label-sm';
+  });
+  if (AppState.routePlaybackTimer) {
+    stopRoutePlayback();
+    toggleRoutePlayback();
+  }
+}
+
+function eksporRiwayatRuteCSV() {
+  const pts = AppState.routeProcessed?.points || [];
+  if (!pts.length) {
+    showToast('Belum ada data rute untuk diekspor.', 'warning');
+    return;
+  }
+  const imei = AppState.selectedTargetImei || 'perangkat';
+  const headers = ['Waktu', 'Latitude', 'Longitude', 'Akurasi (m)', 'Baterai (%)', 'Estimasi Laju (km/j)', 'Status', 'Catatan'];
+  const rows = pts.map(p => [
+    `"${p.fullTime}"`, p.lat, p.lng, p.acc, p.bat, p.speedKmh, `"${p.status}"`, `"${(p.note || '').replace(/"/g, '""')}"`
+  ]);
+  const csv = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const a = document.createElement('a');
+  a.href = encodeURI(csv);
+  a.download = `Riwayat_Rute_${imei}_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast('Riwayat rute berhasil diekspor ke CSV.', 'success');
+}
+
+function cetakBeritaAcaraRute() {
+  window.print();
 }

@@ -2,7 +2,7 @@
 <html class="dark" lang="id">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>LacakHP Pro - Enterprise Mobile Tracking & Lost Phone Locator</title>
   
   <!-- Fonts & Material Symbols -->
@@ -24,30 +24,78 @@
           colors: {
             "background": "#0b1326",
             "surface": "#0b1326",
+            "surface-dim": "#0b1326",
+            "surface-tint": "#7bd0ff",
             "surface-container-lowest": "#060e20",
             "surface-container-low": "#131b2e",
             "surface-container": "#171f33",
             "surface-container-high": "#222a3d",
             "surface-container-highest": "#2d3449",
+            "surface-variant": "#2d3449",
+            "surface-highest": "#2d3449",
             "surface-bright": "#31394d",
             "primary": "#8ed5ff",
+            "primary-fixed": "#c4e7ff",
             "primary-container": "#38bdf8",
+            "on-primary": "#00354a",
+            "on-primary-fixed": "#001e2c",
             "on-primary-container": "#004965",
             "secondary": "#89ceff",
+            "secondary-fixed": "#c9e6ff",
             "secondary-container": "#00a2e6",
+            "on-secondary": "#00344d",
+            "on-secondary-container": "#00344e",
             "tertiary": "#ffbcbf",
             "tertiary-container": "#ff929a",
             "error": "#ffb4ab",
             "error-container": "#93000a",
+            "on-error": "#690005",
             "on-error-container": "#ffdad6",
             "on-surface": "#dae2fd",
             "on-surface-variant": "#bdc8d1",
             "outline": "#87929a",
             "outline-variant": "#3e484f"
           },
+          spacing: {
+            "gutter": "1rem",
+            "margin": "1rem",
+            "gutter-desktop": "1.25rem",
+            "margin-desktop": "1.5rem",
+            "space-xs": "0.25rem",
+            "space-sm": "0.5rem",
+            "space-md": "0.75rem",
+            "space-lg": "1rem",
+            "space-xl": "1.5rem"
+          },
           fontFamily: {
             sans: ['Plus Jakarta Sans', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace']
+            mono: ['JetBrains Mono', 'monospace'],
+            "code-tabular": ['JetBrains Mono', 'monospace'],
+            "headline-xl": ['Plus Jakarta Sans', 'sans-serif'],
+            "headline-lg": ['Plus Jakarta Sans', 'sans-serif'],
+            "headline-md": ['Plus Jakarta Sans', 'sans-serif'],
+            "headline-sm": ['Plus Jakarta Sans', 'sans-serif'],
+            "title-md": ['Plus Jakarta Sans', 'sans-serif'],
+            "body-lg": ['Plus Jakarta Sans', 'sans-serif'],
+            "body-md": ['Plus Jakarta Sans', 'sans-serif'],
+            "body-sm": ['Plus Jakarta Sans', 'sans-serif'],
+            "label-lg": ['Plus Jakarta Sans', 'sans-serif'],
+            "label-md": ['Plus Jakarta Sans', 'sans-serif'],
+            "label-sm": ['Plus Jakarta Sans', 'sans-serif']
+          },
+          fontSize: {
+            "headline-xl": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" }],
+            "headline-lg": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600" }],
+            "headline-md": ["20px", { lineHeight: "28px", letterSpacing: "-0.01em", fontWeight: "600" }],
+            "headline-sm": ["16px", { lineHeight: "24px", letterSpacing: "0em", fontWeight: "600" }],
+            "title-md": ["14px", { lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "600" }],
+            "body-lg": ["15px", { lineHeight: "22px", letterSpacing: "0em", fontWeight: "400" }],
+            "body-md": ["13px", { lineHeight: "18px", letterSpacing: "0em", fontWeight: "400" }],
+            "body-sm": ["12px", { lineHeight: "16px", letterSpacing: "0.01em", fontWeight: "400" }],
+            "label-lg": ["13px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "500" }],
+            "label-md": ["11px", { lineHeight: "14px", letterSpacing: "0.06em", fontWeight: "600" }],
+            "label-sm": ["10px", { lineHeight: "12px", letterSpacing: "0.08em", fontWeight: "600" }],
+            "code-tabular": ["12px", { lineHeight: "16px", letterSpacing: "0.04em", fontWeight: "500" }]
           }
         }
       }
@@ -78,106 +126,188 @@
 <body class="bg-surface font-sans text-on-surface antialiased flex flex-col min-h-screen select-none">
 
   <!-- ========================================================================
-       TOP GLOBAL NAVIGATION BAR
+       LEFT PERSISTENT OPS SIDEBAR (Desktop >= 1024px)
        ======================================================================== -->
-  <header class="sticky top-0 z-40 bg-surface-container-low/90 backdrop-blur-md border-b border-surface-container-high px-3 lg:px-6 py-2.5 flex items-center justify-between">
-    <!-- Brand / Identity -->
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-primary shadow-sm border border-surface-highest">
-        <span class="material-symbols-outlined text-[22px]">radar</span>
-      </div>
-      <div>
-        <div class="flex items-center gap-1.5">
-          <span class="font-bold text-base tracking-tight text-white">LacakHP Pro</span>
-          <span class="px-1.5 py-0.2 rounded text-[10px] font-bold tracking-wider uppercase bg-primary-container/20 text-primary border border-primary/20">Enterprise</span>
+  <aside id="app-sidebar" class="hidden lg:flex fixed left-0 top-0 bottom-0 w-[248px] bg-surface-container-low border-r border-surface-container-high/80 z-40 flex-col justify-between shadow-lg">
+    <div class="flex flex-col">
+      <!-- Brand / Ops Center Logo -->
+      <div class="h-16 px-4 flex items-center gap-2.5 border-b border-surface-container-high/60">
+        <div class="w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-primary border border-surface-highest/80 shadow-sm shrink-0">
+          <span class="material-symbols-outlined text-[22px]">radar</span>
         </div>
-        <div class="text-[11px] text-outline font-medium">TERMINAL KONTROL SENTRAL &amp; TELEMETRI</div>
-      </div>
-    </div>
-
-    <!-- Mode Switcher (Desktop Tabs) -->
-    <div class="hidden xl:flex items-center bg-surface-container-lowest p-1 rounded-xl border border-surface-container-high">
-      <button onclick="navigateToTab('live-tracking')" data-nav-tab="live-tracking" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition text-on-surface hover:text-primary">
-        <span class="material-symbols-outlined text-[16px]">location_on</span>
-        Peta Langsung
-      </button>
-      <button onclick="navigateToTab('master-devices')" data-nav-tab="master-devices" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition text-on-surface hover:text-primary">
-        <span class="material-symbols-outlined text-[16px]">devices</span>
-        Master Perangkat
-      </button>
-      <button onclick="navigateToTab('remote-command')" data-nav-tab="remote-command" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition text-rose-300 hover:text-rose-200">
-        <span class="material-symbols-outlined text-[16px] text-tertiary">crisis_alert</span>
-        Pusat Intervensi OTA
-      </button>
-      <button onclick="navigateToTab('signal-recovery')" data-nav-tab="signal-recovery" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition text-sky-300 hover:text-sky-200">
-        <span class="material-symbols-outlined text-[16px] text-primary">cell_tower</span>
-        Signal Recovery
-      </button>
-      <button onclick="navigateToTab('staff-client')" data-nav-tab="staff-client" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition text-sky-400 bg-sky-500/10 border border-sky-500/20 hover:bg-sky-500/20">
-        <span class="material-symbols-outlined text-[16px]">smartphone</span>
-        Layar HP Staf
-      </button>
-    </div>
-
-    <!-- Right Controls: Status Backend, Clock, Settings, Profile -->
-    <div class="flex items-center gap-2.5">
-      <!-- Backend Sync Indicator -->
-      <div class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-surface-container border border-surface-highest/60 text-xs">
-        <span id="backend-sync-indicator" class="w-2 h-2 rounded-full bg-emerald-400"></span>
-        <span id="backend-sync-text" class="text-slate-300 font-mono text-[11px]">GAS Backend Terhubung</span>
+        <div class="flex flex-col min-w-0">
+          <span class="font-bold text-sm tracking-tight text-white leading-tight truncate">LacakHP Pro</span>
+          <span class="font-label-sm text-[10px] text-primary uppercase tracking-widest leading-tight">OPS CENTER</span>
+        </div>
       </div>
 
-      <!-- Live Clock -->
-      <div id="live-clock" class="text-xs font-mono text-primary font-semibold hidden md:block">
-        --:--:-- WIB
+      <!-- Navigation Section Header -->
+      <div class="px-4 pt-4 pb-1.5">
+        <span class="font-label-sm text-[10px] uppercase tracking-wider text-outline font-semibold">SISTEM PELACAKAN</span>
       </div>
 
-      <!-- Active User Label -->
-      <span id="navbar-user-label" class="hidden md:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-container border border-surface-highest/60 text-xs text-primary font-semibold">-</span>
-
-      <!-- Settings Endpoint Button -->
-      <button onclick="bukaModalSettings()" title="Konfigurasi URL Google Apps Script" class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-slate-300 hover:text-white hover:bg-surface-highest transition border border-surface-highest/50">
-        <span class="material-symbols-outlined text-[18px]">tune</span>
-      </button>
-
-      <!-- Logout / User Button -->
-      <button onclick="logoutUser()" title="Keluar Akun" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-highest text-slate-300 hover:text-rose-300 transition border border-surface-highest/50 text-xs font-medium">
-        <span class="material-symbols-outlined text-[16px]">logout</span>
-        <span class="hidden sm:inline">Keluar</span>
-      </button>
+      <!-- Primary Navigation -->
+      <nav aria-label="Sistem Pelacakan" class="flex flex-col gap-1 px-2.5">
+        <button type="button" onclick="navigateToTab('live-tracking')" data-nav-tab="live-tracking" class="min-h-[40px] w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-left">
+          <span class="flex items-center gap-2.5 min-w-0">
+            <span class="material-symbols-outlined text-[18px]">radar</span>
+            <span class="truncate">Peta Langsung</span>
+          </span>
+        </button>
+        <button type="button" onclick="navigateToTab('master-devices')" data-nav-tab="master-devices" class="min-h-[40px] w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-left">
+          <span class="flex items-center gap-2.5 min-w-0">
+            <span class="material-symbols-outlined text-[18px]">phonelink_setup</span>
+            <span class="truncate">Master Perangkat</span>
+          </span>
+        </button>
+        <button type="button" onclick="navigateToTab('route-history')" data-nav-tab="route-history" class="min-h-[40px] w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-left">
+          <span class="flex items-center gap-2.5 min-w-0">
+            <span class="material-symbols-outlined text-[18px]">route</span>
+            <span class="truncate">Riwayat Rute</span>
+          </span>
+        </button>
+        <button type="button" onclick="navigateToTab('signal-recovery')" data-nav-tab="signal-recovery" class="min-h-[40px] w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-left">
+          <span class="flex items-center gap-2.5 min-w-0">
+            <span class="material-symbols-outlined text-[18px]">fmd_bad</span>
+            <span class="truncate">Insiden Hilang</span>
+          </span>
+          <span id="sidebar-badge-hilang" class="hidden px-1.5 py-0.5 rounded-full bg-error-container text-on-error-container font-mono text-[10px] font-bold">0</span>
+        </button>
+        <button type="button" onclick="navigateToTab('remote-command')" data-nav-tab="remote-command" class="min-h-[40px] w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-left">
+          <span class="flex items-center gap-2.5 min-w-0">
+            <span class="material-symbols-outlined text-[18px] text-tertiary">crisis_alert</span>
+            <span class="truncate">Pusat Intervensi OTA</span>
+          </span>
+        </button>
+        <button type="button" onclick="navigateToTab('staff-client')" data-nav-tab="staff-client" class="min-h-[40px] w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-sky-300 hover:bg-surface-container hover:text-sky-200 transition-colors text-left">
+          <span class="flex items-center gap-2.5 min-w-0">
+            <span class="material-symbols-outlined text-[18px]">smartphone</span>
+            <span class="truncate">Layar HP Staf</span>
+          </span>
+        </button>
+      </nav>
     </div>
-  </header>
 
-  <!-- Mobile Bottom Switcher Bar (Mobile Navigation Bar) -->
-  <nav class="xl:hidden fixed bottom-0 inset-x-0 z-40 pb-safe bg-surface-container-low/95 backdrop-blur-xl border-t border-surface-container-high shadow-lg">
-    <div class="h-16 px-1 flex items-center justify-around">
-      <button onclick="navigateToTab('live-tracking')" data-nav-tab="live-tracking" class="flex-1 h-full flex flex-col items-center justify-center gap-0.5 text-on-surface-variant hover:text-on-surface transition-colors">
-        <span class="material-symbols-outlined text-[20px]">location_searching</span>
-        <span class="text-[10px] tracking-wider uppercase font-semibold">Pantau</span>
-      </button>
-      <button onclick="navigateToTab('master-devices')" data-nav-tab="master-devices" class="flex-1 h-full flex flex-col items-center justify-center gap-0.5 text-primary-container font-semibold">
-        <span class="material-symbols-outlined text-[20px]">devices</span>
-        <span class="text-[10px] tracking-wider uppercase">Aset</span>
-      </button>
-      <button onclick="navigateToTab('remote-command')" data-nav-tab="remote-command" class="flex-1 h-full flex flex-col items-center justify-center gap-0.5 text-rose-300 font-semibold">
-        <span class="material-symbols-outlined text-[20px]">crisis_alert</span>
-        <span class="text-[10px] tracking-wider uppercase">OTA</span>
-      </button>
-      <button onclick="navigateToTab('signal-recovery')" data-nav-tab="signal-recovery" class="flex-1 h-full flex flex-col items-center justify-center gap-0.5 text-on-surface-variant hover:text-on-surface">
-        <span class="material-symbols-outlined text-[20px]">cell_tower</span>
-        <span class="text-[10px] tracking-wider uppercase">Insiden</span>
-      </button>
-      <button onclick="navigateToTab('staff-client')" data-nav-tab="staff-client" class="flex-1 h-full flex flex-col items-center justify-center gap-0.5 text-sky-400 font-bold">
-        <span class="material-symbols-outlined text-[20px]">smartphone</span>
-        <span class="text-[10px] tracking-wider uppercase">HP Staf</span>
-      </button>
+    <!-- Sidebar Footer: GAS Sync & Active Operator Card -->
+    <div class="p-3 bg-surface-container-lowest m-3 rounded-xl border border-surface-container-high/70 flex flex-col gap-2.5">
+      <div class="flex items-center justify-between text-[10px]">
+        <div class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="text-on-surface-variant uppercase tracking-wider font-semibold">GAS BACKEND SYNC</span>
+        </div>
+        <span id="sidebar-sync-badge" class="font-mono text-primary font-semibold">24/7 LIVE</span>
+      </div>
+      <div class="flex items-center justify-between pt-2 border-t border-surface-container-high/50 gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary shrink-0">
+            <span class="material-symbols-outlined text-[18px]">shield_person</span>
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span id="sidebar-user-name" class="text-xs font-semibold text-on-surface truncate">Admin Dispatcher</span>
+            <span id="sidebar-user-role" class="text-[10px] text-outline truncate">Pusat Ops Regional</span>
+          </div>
+        </div>
+        <button type="button" onclick="logoutUser()" aria-label="Keluar dari Sistem" title="Keluar dari Sistem" class="w-8 h-8 rounded-lg hover:bg-surface-container text-on-surface-variant hover:text-error flex items-center justify-center transition-colors shrink-0">
+          <span class="material-symbols-outlined text-[18px]">logout</span>
+        </button>
+      </div>
     </div>
-  </nav>
+  </aside>
 
   <!-- ========================================================================
-       MAIN APP CONTAINER (SPA VIEWS)
+       SHELL KONTEN UTAMA (DIBUNGKUS UNTUK OFFSET SIDEBAR)
        ======================================================================== -->
-  <main class="flex-1 flex flex-col relative w-full overflow-y-auto pb-20 md:pb-6">
+  <div id="app-shell-content" class="lg:pl-[248px] flex-1 flex flex-col min-w-0 min-h-screen">
+
+    <!-- Top Command Console Bar -->
+    <header id="app-topbar" class="sticky top-0 z-30 h-16 bg-surface-container-low/95 backdrop-blur-md border-b border-surface-container-high/80 px-3 lg:px-6 flex items-center justify-between gap-3">
+      <!-- Left: Mobile Logo + Breadcrumb + Quick Search -->
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="flex lg:hidden items-center gap-2 shrink-0">
+          <div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary border border-surface-highest">
+            <span class="material-symbols-outlined text-[18px]">radar</span>
+          </div>
+          <span class="font-bold text-sm text-white">LacakHP</span>
+        </div>
+
+        <div class="hidden sm:flex items-center gap-1.5 text-xs text-outline whitespace-nowrap">
+          <span class="material-symbols-outlined text-[16px]">terminal</span>
+          <span>LacakHP Pro</span>
+          <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+          <span id="topbar-breadcrumb" class="text-on-surface font-semibold">Command Console</span>
+        </div>
+
+        <div class="hidden md:block h-4 w-px bg-surface-variant"></div>
+
+        <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container border border-surface-container-high/60 focus-within:border-primary/60 transition-colors">
+          <span class="material-symbols-outlined text-[16px] text-outline">search</span>
+          <input id="global-quick-search" type="text" onkeydown="handleGlobalSearchKey(event)" placeholder="Cari IMEI, Kode Armada, atau Nama Pemilik..." class="bg-transparent border-none outline-none text-xs text-on-surface placeholder:text-outline w-56 xl:w-72"/>
+        </div>
+      </div>
+
+      <!-- Right Controls: Live Clock, GAS Status, Alerts, Settings, Profile -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-surface-container-lowest border border-surface-container-high/60 text-xs">
+          <span class="material-symbols-outlined text-[15px] text-primary">schedule</span>
+          <span id="live-clock" class="font-mono text-on-surface font-semibold">--:--:-- WIB</span>
+        </div>
+
+        <div class="hidden xl:flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-container border border-surface-highest/60 text-xs">
+          <span id="backend-sync-indicator" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span id="backend-sync-text" class="text-slate-300 font-mono text-[11px]">GAS Backend Terhubung</span>
+        </div>
+
+        <button type="button" onclick="navigateToTab('signal-recovery')" aria-label="Lihat Insiden Hilang" title="Lihat Insiden Hilang" class="w-9 h-9 rounded-lg bg-surface-container hover:bg-surface-highest flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors border border-surface-highest/50">
+          <span class="material-symbols-outlined text-[18px]">notifications</span>
+        </button>
+
+        <button type="button" onclick="bukaModalSettings()" aria-label="Konfigurasi URL Google Apps Script" title="Konfigurasi URL Google Apps Script" class="w-9 h-9 rounded-lg bg-surface-container hover:bg-surface-highest flex items-center justify-center text-slate-300 hover:text-white transition-colors border border-surface-highest/50">
+          <span class="material-symbols-outlined text-[18px]">tune</span>
+        </button>
+
+        <button type="button" onclick="bukaModalSettings()" aria-label="Profil Pengguna Aktif" title="Info Akun & Pengaturan" class="flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full bg-surface-container hover:bg-surface-highest border border-surface-highest/60 transition-colors">
+          <span class="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-on-primary">
+            <span class="material-symbols-outlined text-[16px]">person</span>
+          </span>
+          <span id="navbar-user-label" class="hidden md:inline text-xs text-primary font-semibold max-w-[140px] truncate">-</span>
+        </button>
+
+        <button type="button" onclick="logoutUser()" aria-label="Keluar Akun" title="Keluar Akun" class="lg:hidden w-9 h-9 rounded-lg bg-surface-container hover:bg-surface-highest text-slate-300 hover:text-rose-300 flex items-center justify-center border border-surface-highest/50">
+          <span class="material-symbols-outlined text-[18px]">logout</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Mobile Bottom Switcher Bar (Mobile Navigation Bar < 1024px) -->
+    <nav id="mobile-bottom-nav" aria-label="Navigasi Mobile" class="lg:hidden fixed bottom-0 inset-x-0 z-40 pb-safe bg-surface-container-low/95 backdrop-blur-xl border-t border-surface-container-high shadow-lg">
+      <div class="h-16 px-1 flex items-center justify-around">
+        <button type="button" onclick="navigateToTab('live-tracking')" data-nav-tab="live-tracking" class="flex-1 min-h-[48px] flex flex-col items-center justify-center gap-0.5 text-on-surface-variant hover:text-on-surface transition-colors">
+          <span class="material-symbols-outlined text-[20px]">location_searching</span>
+          <span class="text-[10px] tracking-wider uppercase font-semibold">Pantau</span>
+        </button>
+        <button type="button" onclick="navigateToTab('master-devices')" data-nav-tab="master-devices" class="flex-1 min-h-[48px] flex flex-col items-center justify-center gap-0.5 text-on-surface-variant hover:text-on-surface transition-colors">
+          <span class="material-symbols-outlined text-[20px]">devices</span>
+          <span class="text-[10px] tracking-wider uppercase font-semibold">Aset</span>
+        </button>
+        <button type="button" onclick="navigateToTab('route-history')" data-nav-tab="route-history" class="flex-1 min-h-[48px] flex flex-col items-center justify-center gap-0.5 text-on-surface-variant hover:text-on-surface transition-colors">
+          <span class="material-symbols-outlined text-[20px]">route</span>
+          <span class="text-[10px] tracking-wider uppercase font-semibold">Rute</span>
+        </button>
+        <button type="button" onclick="navigateToTab('signal-recovery')" data-nav-tab="signal-recovery" class="flex-1 min-h-[48px] flex flex-col items-center justify-center gap-0.5 text-on-surface-variant hover:text-on-surface transition-colors">
+          <span class="material-symbols-outlined text-[20px]">cell_tower</span>
+          <span class="text-[10px] tracking-wider uppercase font-semibold">Insiden</span>
+        </button>
+        <button type="button" onclick="navigateToTab('staff-client')" data-nav-tab="staff-client" class="flex-1 min-h-[48px] flex flex-col items-center justify-center gap-0.5 text-sky-400 font-bold transition-colors">
+          <span class="material-symbols-outlined text-[20px]">smartphone</span>
+          <span class="text-[10px] tracking-wider uppercase">HP Staf</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- ========================================================================
+         MAIN APP CONTAINER (SPA VIEWS)
+         ======================================================================== -->
+    <main class="flex-1 flex flex-col relative w-full overflow-y-auto pb-20 lg:pb-6">
 
     <!-- ======================================================================
          TAB VIEW 1: LIVE TRACKING DASHBOARD (70/30 SPLIT DESKTOP)
@@ -638,1164 +768,370 @@
          Sesuai Stitch lacakhp_pro_riwayat_rute_stop_points
          ====================================================================== -->
     <section id="view-route-history" class="tab-view p-3 lg:p-6 flex justify-center w-full">
-      <!-- Desktop Tactical View (>= 1024px) -->
-      <div class="hidden lg:flex flex-col w-full max-w-[1720px] mx-auto gap-6 text-on-surface">
-        <div class="flex flex-col w-full">
-<div class="p-space-lg lg:p-space-xl flex flex-col gap-space-lg w-full max-w-[1720px] mx-auto">
-<!-- Header Section -->
-<div class="flex flex-col xl:flex-row xl:items-center justify-between gap-space-md">
-<div class="flex flex-col gap-1">
-<div class="flex items-center gap-space-sm">
-<span class="px-space-xs py-0.5 rounded bg-surface-container-high text-primary font-code-tabular text-label-sm uppercase tracking-wider">MODUL-03 // TELEMETRI</span>
-<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
-<span class="text-outline font-label-sm text-label-sm uppercase tracking-wider">GAS DB_LacakHP_Pro &gt; Log_Pelacakan</span>
-</div>
-<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight font-bold">Riwayat Rute &amp; Breadcrumb Trails</h1>
-<p class="font-body-md text-body-md text-on-surface-variant max-w-4xl">
-          Investigasi pergerakan armada dan riwayat telemetri GPS berbasis nomor IMEI dari Google Sheets secara real-time dengan rekonstruksi polyline presisi tinggi.
-        </p>
-</div>
-<div class="flex items-center gap-space-sm flex-wrap">
-<button class="h-9 px-space-md rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-variant transition-colors flex items-center gap-space-sm font-label-lg text-label-lg" type="button">
-<span class="material-symbols-outlined text-[16px] text-primary">download</span>
-<span>Ekspor Rute (XLS/PDF)</span>
-</button>
-<button class="h-9 px-space-md rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-variant transition-colors flex items-center gap-space-sm font-label-lg text-label-lg" type="button">
-<span class="material-symbols-outlined text-[16px] text-outline">print</span>
-<span>Cetak Berita Acara</span>
-</button>
-</div>
-</div>
-<!-- Filter Control Bar -->
-<div class="bg-surface-container-low rounded-lg p-space-md shadow-md flex flex-col gap-space-md">
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-space-md items-end">
-<!-- Target Device IMEI -->
-<div class="xl:col-span-4 flex flex-col gap-1.5">
-<label class="font-label-sm text-label-sm text-outline uppercase tracking-wider flex items-center justify-between">
-<span>Nomor IMEI &amp; Personel Lapangan</span>
-<span class="text-error font-code-tabular text-label-sm">Insiden Sinyal Pulih</span>
-</label>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-primary">phonelink_setup</span>
-<select id="routeHistoryDeviceSelect" class="w-full h-10 pl-9 pr-8 bg-surface-container-lowest text-on-surface font-body-sm text-body-sm rounded-lg outline-none focus:bg-surface-container transition-colors cursor-pointer appearance-none">
-<option value="">Memuat daftar perangkat...</option>
-</select>
-<span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] text-outline pointer-events-none">expand_more</span>
-</div>
-</div>
-<!-- Date Range: Start -->
-<div class="xl:col-span-3 flex flex-col gap-1.5">
-<label class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Rentang Waktu Awal (WIB)</label>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-outline">calendar_today</span>
-<input class="w-full h-10 pl-9 pr-3 bg-surface-container-lowest text-on-surface font-code-tabular text-body-sm rounded-lg outline-none focus:bg-surface-container transition-colors" type="text" value="18/03/2026 08:00 WIB"/>
-</div>
-</div>
-<!-- Date Range: End -->
-<div class="xl:col-span-3 flex flex-col gap-1.5">
-<label class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Rentang Waktu Akhir (WIB)</label>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-outline">update</span>
-<input class="w-full h-10 pl-9 pr-3 bg-surface-container-lowest text-on-surface font-code-tabular text-body-sm rounded-lg outline-none focus:bg-surface-container transition-colors" type="text" value="18/03/2026 14:30 WIB"/>
-</div>
-</div>
-<!-- Fetch Button -->
-<div class="xl:col-span-2">
-<button class="w-full h-10 px-space-md rounded-lg bg-primary-container text-on-primary-container font-headline-sm text-title-md font-semibold hover:bg-secondary-container transition-colors flex items-center justify-center gap-space-sm shadow-sm active:scale-[0.99]" id="btn-load-route" type="button">
-<span class="material-symbols-outlined text-[18px]">play_circle</span>
-<span>Muat Jejak Rute</span>
-</button>
-</div>
-</div>
-<!-- Toggles & Filters Row -->
-<div class="flex items-center justify-between flex-wrap gap-space-md pt-space-xs bg-surface-container-lowest/40 p-space-sm rounded-lg">
-<div class="flex items-center gap-space-lg flex-wrap">
-<label class="flex items-center gap-space-xs cursor-pointer select-none">
-<input checked="" class="w-4 h-4 rounded bg-surface-container-lowest accent-primary-container cursor-pointer" type="checkbox"/>
-<span class="font-body-sm text-body-sm text-on-surface">Titik Henti (Stop Points &gt; 10 mnt)</span>
-</label>
-<label class="flex items-center gap-space-xs cursor-pointer select-none">
-<input checked="" class="w-4 h-4 rounded bg-surface-container-lowest accent-primary-container cursor-pointer" type="checkbox"/>
-<span class="font-body-sm text-body-sm text-on-surface">Garis Polyline Dinamis</span>
-</label>
-<label class="flex items-center gap-space-xs cursor-pointer select-none">
-<input checked="" class="w-4 h-4 rounded bg-surface-container-lowest accent-primary-container cursor-pointer" type="checkbox"/>
-<span class="font-body-sm text-body-sm text-on-surface">Akurasi Radius GPS (GNSS Ellipse)</span>
-</label>
-<label class="flex items-center gap-space-xs cursor-pointer select-none">
-<input class="w-4 h-4 rounded bg-surface-container-lowest accent-primary-container cursor-pointer" type="checkbox"/>
-<span class="font-body-sm text-body-sm text-on-surface">Sembunyikan Jeda Idle (&lt; 2 km/h)</span>
-</label>
-</div>
-<div class="flex items-center gap-space-sm text-outline font-label-sm text-label-sm">
-<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-<span>Sinkronisasi Otomatis Google Sheets (Interval 30s)</span>
-</div>
-</div>
-</div>
-<!-- 4 KPI Metrics -->
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md">
-<!-- KPI 1 -->
-<div class="bg-surface-container-low rounded-lg p-space-md shadow-sm flex flex-col justify-between gap-space-sm">
-<div class="flex items-center justify-between">
-<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Total Jarak Tempuh</span>
-<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center">
-<span class="material-symbols-outlined text-[18px] text-primary">distance</span>
-</div>
-</div>
-<div class="flex items-baseline gap-space-xs">
-<span class="font-headline-xl text-headline-xl text-on-surface font-bold font-code-tabular">38.4</span>
-<span class="font-headline-sm text-headline-sm text-primary">km</span>
-</div>
-<div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
-<span>Efisiensi Rute Terencana</span>
-<span class="text-primary font-code-tabular font-semibold">92.4% Optimal</span>
-</div>
-</div>
-<!-- KPI 2 -->
-<div class="bg-surface-container-low rounded-lg p-space-md shadow-sm flex flex-col justify-between gap-space-sm">
-<div class="flex items-center justify-between">
-<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Durasi Bergerak / Aktif</span>
-<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center">
-<span class="material-symbols-outlined text-[18px] text-secondary">timer</span>
-</div>
-</div>
-<div class="flex items-baseline gap-space-xs">
-<span class="font-headline-xl text-headline-xl text-on-surface font-bold font-code-tabular">04:25</span>
-<span class="font-headline-sm text-headline-sm text-on-surface-variant">Jam</span>
-</div>
-<div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
-<span>Rerata Laju Armada</span>
-<span class="text-secondary font-code-tabular font-semibold">24.6 km/jam</span>
-</div>
-</div>
-<!-- KPI 3 -->
-<div class="bg-surface-container-low rounded-lg p-space-md shadow-sm flex flex-col justify-between gap-space-sm">
-<div class="flex items-center justify-between">
-<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Titik Henti Terdeteksi</span>
-<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center">
-<span class="material-symbols-outlined text-[18px] text-amber-400">fmd_bad</span>
-</div>
-</div>
-<div class="flex items-baseline gap-space-xs">
-<span class="font-headline-xl text-headline-xl text-on-surface font-bold font-code-tabular">5</span>
-<span class="font-headline-sm text-headline-sm text-amber-400">Lokasi</span>
-</div>
-<div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
-<span>Akumulasi Diam / Parkir</span>
-<span class="text-amber-400 font-code-tabular font-semibold">1 Jam 12 Mnt</span>
-</div>
-</div>
-<!-- KPI 4 -->
-<div class="bg-surface-container-low rounded-lg p-space-md shadow-sm flex flex-col justify-between gap-space-sm">
-<div class="flex items-center justify-between">
-<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Akurasi GPS &amp; Sensor</span>
-<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center">
-<span class="material-symbols-outlined text-[18px] text-emerald-400">satellite_alt</span>
-</div>
-</div>
-<div class="flex items-baseline gap-space-xs">
-<span class="font-headline-xl text-headline-xl text-on-surface font-bold font-code-tabular">±5.2</span>
-<span class="font-headline-sm text-headline-sm text-emerald-400">Meter</span>
-</div>
-<div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
-<span>Kondisi GNSS / Triangulasi</span>
-<span class="text-emerald-400 font-code-tabular font-semibold">18 Satelit Valid</span>
-</div>
-</div>
-</div>
-<!-- Main Section: Interactive Map + Timeline Split View -->
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md items-start">
-<!-- Interactive Dark Map Visual (70% - Col 8) -->
-<div class="lg:col-span-8 flex flex-col gap-space-sm bg-surface-container-low rounded-lg p-space-md shadow-md">
-<!-- Map Canvas Header Bar -->
-<div class="flex items-center justify-between flex-wrap gap-space-sm pb-space-xs">
-<div class="flex items-center gap-space-sm">
-<div class="flex items-center gap-space-xs px-space-sm py-1 rounded bg-surface-container-high text-on-surface font-code-tabular text-label-md">
-<span class="material-symbols-outlined text-[16px] text-primary">my_location</span>
-<span>KORIDOR: CIKARANG - JAKARTA SELATAN</span>
-</div>
-<span class="font-label-sm text-label-sm text-outline">Sumbu Peta: -6.2297, 106.8173</span>
-</div>
-<div class="flex items-center gap-1.5">
-<div class="flex items-center bg-surface-container rounded p-0.5">
-<button class="px-space-sm py-1 rounded bg-primary-container text-on-primary-container font-label-sm text-label-sm font-semibold" type="button">Taktis Gelap</button>
-<button class="px-space-sm py-1 rounded text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm" type="button">Satelit OSM</button>
-<button class="px-space-sm py-1 rounded text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm" type="button">Topografi</button>
-</div>
-<button class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-on-surface hover:bg-surface-variant transition-colors" title="Buka Layar Penuh" type="button">
-<span class="material-symbols-outlined text-[18px]">fullscreen</span>
-</button>
-</div>
-</div>
-<!-- Simulated Tactical Map Viewport -->
-<div class="relative w-full h-[540px] rounded-lg overflow-hidden bg-surface-container-lowest shadow-inner flex items-center justify-center select-none group">
-<!-- Static Dark Styled Vector Grid & Geographic Representation -->
-<svg class="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-40" fill="none" viewbox="0 0 900 540" xmlns="http://www.w3.org/2000/svg">
-<!-- Grid Lines -->
-<defs>
-<pattern height="45" id="tactical-grid" patternunits="userSpaceOnUse" width="45">
-<path d="M 45 0 L 0 0 0 45" fill="none" stroke="#222a3d" stroke-width="0.8"></path>
-<circle cx="0" cy="0" fill="#38bdf8" fill-opacity="0.3" r="1.5"></circle>
-</pattern>
-<lineargradient gradientunits="userSpaceOnUse" id="routeGradient" x1="80" x2="720" y1="440" y2="120">
-<stop offset="0%" stop-color="#38bdf8" stop-opacity="0.9"></stop>
-<stop offset="60%" stop-color="#7bd0ff" stop-opacity="1"></stop>
-<stop offset="100%" stop-color="#ff929a" stop-opacity="1"></stop>
-</lineargradient>
-<filter height="140%" id="glow-cyan" width="140%" x="-20%" y="-20%">
-<fegaussianblur result="blur" stddeviation="3"></fegaussianblur>
-<fecomposite in="SourceGraphic" in2="blur" operator="over"></fecomposite>
-</filter>
-</defs>
-<rect fill="url(#tactical-grid)" height="100%" width="100%"></rect>
-<!-- Arterial Road Simulation -->
-<path d="M 40,480 Q 150,420 280,410 T 490,320 T 630,210 T 840,110" stroke="#171f33" stroke-linecap="round" stroke-width="14"></path>
-<path d="M 120,530 L 280,410 L 390,470 L 610,380" stroke="#171f33" stroke-linecap="round" stroke-width="8"></path>
-<path d="M 280,180 L 490,320 L 520,490" stroke="#171f33" stroke-linecap="round" stroke-width="8"></path>
-<!-- Accuracy Radii for Stop Points -->
-<circle cx="100" cy="450" fill="#38bdf8" fill-opacity="0.08" r="28" stroke="#38bdf8" stroke-dasharray="2 2" stroke-opacity="0.2"></circle>
-<circle cx="270" cy="405" fill="#f59e0b" fill-opacity="0.1" r="32" stroke="#f59e0b" stroke-dasharray="2 2" stroke-opacity="0.3"></circle>
-<circle cx="475" cy="315" fill="#f59e0b" fill-opacity="0.1" r="42" stroke="#f59e0b" stroke-dasharray="2 2" stroke-opacity="0.3"></circle>
-<circle cx="610" cy="215" fill="#f59e0b" fill-opacity="0.1" r="36" stroke="#f59e0b" stroke-dasharray="2 2" stroke-opacity="0.3"></circle>
-<circle cx="735" cy="130" fill="#f43f5e" fill-opacity="0.15" r="50" stroke="#f43f5e" stroke-dasharray="3 3" stroke-opacity="0.4"></circle>
-<!-- Glowing GPS Breadcrumb Trail Polyline -->
-<path d="M 100,450 Q 180,430 270,405 T 390,360 T 475,315 T 560,260 T 610,215 T 670,180 T 735,130" fill="none" filter="url(#glow-cyan)" stroke="url(#routeGradient)" stroke-linecap="round" stroke-width="4.5"></path>
-<!-- Secondary Direction Arrows along Trail -->
-<circle cx="185" cy="425" fill="#38bdf8" r="3"></circle>
-<circle cx="330" cy="385" fill="#38bdf8" r="3"></circle>
-<circle cx="430" cy="338" fill="#38bdf8" r="3"></circle>
-<circle cx="585" cy="235" fill="#7bd0ff" r="3"></circle>
-<circle cx="640" cy="198" fill="#7bd0ff" r="3"></circle>
-<circle cx="700" cy="152" fill="#ff929a" r="3"></circle>
-</svg>
-<!-- Interactive Marker 1: Origin Hub -->
-<div class="absolute left-[70px] top-[410px] flex flex-col items-center group/m cursor-pointer hover:z-30 transition-transform">
-<div class="px-2 py-1 rounded bg-surface-container-high/90 backdrop-blur text-primary font-code-tabular text-label-sm shadow-md flex items-center gap-1">
-<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
-<span>08:00 WIB • Depo Utama</span>
-</div>
-<div class="w-7 h-7 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-[12px] shadow-lg ring-4 ring-primary/20">
-<span class="material-symbols-outlined text-[16px]">warehouse</span>
-</div>
-</div>
-<!-- Interactive Marker 2: Stop Point 1 -->
-<div class="absolute left-[245px] top-[365px] flex flex-col items-center group/m cursor-pointer hover:z-30 transition-transform">
-<div class="px-2 py-1 rounded bg-surface-container-high/90 backdrop-blur text-amber-300 font-code-tabular text-label-sm shadow-md flex items-center gap-1">
-<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-<span>Stop #1: Kantor Pos (25 mnt)</span>
-</div>
-<div class="w-6 h-6 rounded-full bg-amber-500 text-surface-container-lowest flex items-center justify-center font-bold text-[11px] shadow-lg ring-4 ring-amber-500/20">
-              1
+      <div class="flex flex-col w-full max-w-[1720px] mx-auto gap-space-lg text-on-surface">
+
+        <!-- Header Section -->
+        <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-space-md">
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-space-sm flex-wrap">
+              <span class="px-space-xs py-0.5 rounded bg-surface-container-high text-primary font-code-tabular text-label-sm uppercase tracking-wider">MODUL-03 // TELEMETRI</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+              <span class="text-outline font-label-sm text-label-sm uppercase tracking-wider">GAS DB_LacakHP_Pro &gt; Log_Pelacakan</span>
             </div>
-</div>
-<!-- Interactive Marker 3: Stop Point 2 -->
-<div class="absolute left-[450px] top-[275px] flex flex-col items-center group/m cursor-pointer hover:z-30 transition-transform">
-<div class="px-2 py-1 rounded bg-surface-container-high/90 backdrop-blur text-amber-300 font-code-tabular text-label-sm shadow-md flex items-center gap-1">
-<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-<span>Stop #2: SPBU Kuningan (40 mnt)</span>
-</div>
-<div class="w-6 h-6 rounded-full bg-amber-500 text-surface-container-lowest flex items-center justify-center font-bold text-[11px] shadow-lg ring-4 ring-amber-500/20">
-              2
+            <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight font-bold">Riwayat Rute &amp; Breadcrumb Trails</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant max-w-4xl">
+              Investigasi pergerakan armada dan riwayat telemetri GPS berbasis nomor IMEI dari Google Sheets secara real-time dengan rekonstruksi polyline presisi tinggi.
+            </p>
+          </div>
+          <div class="flex items-center gap-space-sm flex-wrap">
+            <button onclick="eksporRiwayatRuteCSV()" class="min-h-[40px] px-space-md rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-variant transition-colors flex items-center gap-space-sm font-label-lg text-label-lg border border-surface-highest/50" type="button">
+              <span class="material-symbols-outlined text-[16px] text-primary">download</span>
+              <span>Ekspor Rute (CSV)</span>
+            </button>
+            <button onclick="cetakBeritaAcaraRute()" class="min-h-[40px] px-space-md rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-variant transition-colors flex items-center gap-space-sm font-label-lg text-label-lg border border-surface-highest/50" type="button">
+              <span class="material-symbols-outlined text-[16px] text-outline">print</span>
+              <span>Cetak Berita Acara</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Control Bar -->
+        <div class="bg-surface-container-low rounded-xl p-space-md border border-surface-highest/50 shadow-md flex flex-col gap-space-md">
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-space-md items-end">
+            <!-- Target Device IMEI -->
+            <div class="xl:col-span-4 flex flex-col gap-1.5">
+              <label for="routeHistoryDeviceSelect" class="font-label-sm text-label-sm text-outline uppercase tracking-wider flex items-center justify-between gap-2">
+                <span>Nomor IMEI &amp; Personel Lapangan</span>
+                <span id="rh-device-status-badge" class="text-primary font-code-tabular text-label-sm">-</span>
+              </label>
+              <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-primary pointer-events-none">phonelink_setup</span>
+                <select id="routeHistoryDeviceSelect" onchange="muatRiwayatRute()" class="w-full h-10 pl-9 pr-8 bg-surface-container-lowest text-on-surface font-body-sm text-body-sm rounded-lg border border-surface-highest/60 outline-none focus:border-primary transition-colors cursor-pointer appearance-none">
+                  <option value="">Memuat daftar perangkat...</option>
+                </select>
+                <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] text-outline pointer-events-none">expand_more</span>
+              </div>
             </div>
-</div>
-<!-- Interactive Marker 4: Stop Point 3 -->
-<div class="absolute left-[585px] top-[175px] flex flex-col items-center group/m cursor-pointer hover:z-30 transition-transform">
-<div class="px-2 py-1 rounded bg-surface-container-high/90 backdrop-blur text-amber-300 font-code-tabular text-label-sm shadow-md flex items-center gap-1">
-<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-<span>Stop #3: Komdak (35 mnt)</span>
-</div>
-<div class="w-6 h-6 rounded-full bg-amber-500 text-surface-container-lowest flex items-center justify-center font-bold text-[11px] shadow-lg ring-4 ring-amber-500/20">
-              3
+
+            <!-- Date Range: Start -->
+            <div class="xl:col-span-3 flex flex-col gap-1.5">
+              <label for="route-start-date" class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Rentang Waktu Awal (WIB)</label>
+              <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-outline pointer-events-none">calendar_today</span>
+                <input id="route-start-date" type="datetime-local" class="w-full h-10 pl-9 pr-3 bg-surface-container-lowest text-on-surface font-code-tabular text-body-sm rounded-lg border border-surface-highest/60 outline-none focus:border-primary transition-colors"/>
+              </div>
             </div>
-</div>
-<!-- Interactive Marker 5: Current Position / Incident Recovery Point -->
-<div class="absolute left-[705px] top-[85px] flex flex-col items-center group/m cursor-pointer z-20">
-<div class="px-2.5 py-1 rounded bg-error-container/95 text-on-error-container font-code-tabular text-label-sm shadow-lg flex items-center gap-1.5 border-l-2 border-tertiary">
-<span class="w-2 h-2 rounded-full bg-error animate-ping"></span>
-<span class="font-bold">14:28 WIB • SINYAL PULIH</span>
-</div>
-<div class="relative mt-1">
-<div class="w-8 h-8 rounded-full bg-error text-on-error flex items-center justify-center shadow-xl ring-4 ring-error/30 animate-pulse">
-<span class="material-symbols-outlined text-[18px]">cell_tower</span>
-</div>
-</div>
-<div class="mt-1 px-2 py-0.5 rounded bg-surface-container-lowest/90 text-on-surface font-body-sm text-[11px] shadow">
-              Jl. Gatot Subroto 45 (Baterai 12%)
+
+            <!-- Date Range: End -->
+            <div class="xl:col-span-3 flex flex-col gap-1.5">
+              <label for="route-end-date" class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Rentang Waktu Akhir (WIB)</label>
+              <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-outline pointer-events-none">update</span>
+                <input id="route-end-date" type="datetime-local" class="w-full h-10 pl-9 pr-3 bg-surface-container-lowest text-on-surface font-code-tabular text-body-sm rounded-lg border border-surface-highest/60 outline-none focus:border-primary transition-colors"/>
+              </div>
             </div>
-</div>
-<!-- Floating Map Compass & Zoom HUD -->
-<div class="absolute right-4 top-4 flex flex-col gap-2">
-<div class="flex flex-col bg-surface-container-high/90 backdrop-blur rounded-lg p-1 shadow-lg">
-<button class="w-8 h-8 flex items-center justify-center text-on-surface hover:text-primary hover:bg-surface-container transition-colors rounded" type="button">
-<span class="material-symbols-outlined text-[18px]">add</span>
-</button>
-<div class="h-px bg-surface-variant w-full my-0.5"></div>
-<button class="w-8 h-8 flex items-center justify-center text-on-surface hover:text-primary hover:bg-surface-container transition-colors rounded" type="button">
-<span class="material-symbols-outlined text-[18px]">remove</span>
-</button>
-</div>
-<button class="w-8 h-8 rounded-lg bg-surface-container-high/90 backdrop-blur flex items-center justify-center text-primary hover:bg-surface-container transition-colors shadow-lg" title="Pusatkan ke Titik Terkini" type="button">
-<span class="material-symbols-outlined text-[18px]">near_me</span>
-</button>
-</div>
-<!-- Bottom Floating Map Telemetry Legend -->
-<div class="absolute left-4 bottom-4 px-space-md py-space-xs rounded-lg bg-surface-container-high/90 backdrop-blur shadow-lg flex items-center gap-space-lg text-label-sm font-label-sm">
-<div class="flex items-center gap-1.5">
-<span class="w-3 h-1 bg-primary rounded-full"></span>
-<span class="text-on-surface">Rute Aktif Bergerak</span>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-<span class="text-on-surface">Titik Berhenti (&gt;10m)</span>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="w-2.5 h-2.5 rounded-full bg-error"></span>
-<span class="text-on-surface">Posisi Sinyal Dipulihkan</span>
-</div>
-</div>
-</div>
-<!-- Simulation Playback & Speed Controls (VCR Bar) -->
-<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md bg-surface-container p-space-sm rounded-lg">
-<div class="flex items-center gap-space-sm">
-<button class="w-9 h-9 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center hover:bg-secondary-container transition-colors" id="btn-play-sim" type="button">
-<span class="material-symbols-outlined text-[20px]">play_arrow</span>
-</button>
-<button class="w-9 h-9 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-center hover:bg-surface-variant transition-colors" type="button">
-<span class="material-symbols-outlined text-[18px]">replay</span>
-</button>
-<div class="flex flex-col">
-<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Simulasi Putar Rute</span>
-<span class="font-code-tabular text-body-sm text-primary font-semibold">14:28:09 WIB (Waypoint 84 / 84)</span>
-</div>
-</div>
-<!-- Progress scrubber -->
-<div class="flex-1 max-w-md flex items-center gap-space-sm px-space-sm">
-<span class="font-code-tabular text-label-sm text-outline">08:00</span>
-<div class="relative w-full flex items-center">
-<div class="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
-<div class="h-full bg-primary rounded-full w-full"></div>
-</div>
-<div class="absolute right-0 w-3.5 h-3.5 bg-on-surface rounded-full shadow-md -translate-y-0.25 ring-2 ring-primary"></div>
-</div>
-<span class="font-code-tabular text-label-sm text-primary">14:28</span>
-</div>
-<!-- Speed Controls -->
-<div class="flex items-center gap-1">
-<span class="font-label-sm text-label-sm text-outline mr-1">Kecepatan:</span>
-<button class="px-2 py-1 rounded bg-surface-container-high text-on-surface-variant hover:text-on-surface font-code-tabular text-label-sm" type="button">1x</button>
-<button class="px-2 py-1 rounded bg-primary-container text-on-primary-container font-code-tabular text-label-sm font-bold" type="button">2x</button>
-<button class="px-2 py-1 rounded bg-surface-container-high text-on-surface-variant hover:text-on-surface font-code-tabular text-label-sm" type="button">4x</button>
-</div>
-</div>
-</div>
-<!-- Right Column: Chronological Waypoints & Stop Points (30% - Col 4) -->
-<div class="lg:col-span-4 flex flex-col gap-space-sm bg-surface-container-low rounded-lg p-space-md shadow-md h-full">
-<div class="flex items-center justify-between pb-space-xs">
-<div class="flex flex-col">
-<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Kronologi Waypoint &amp; Titik Henti</h3>
-<span class="font-label-sm text-label-sm text-outline">Diurutkan dari event terbaru</span>
-</div>
-<span class="px-space-xs py-0.5 rounded bg-surface-container-high text-secondary font-code-tabular text-label-sm font-semibold">6 Segmen</span>
-</div>
-<!-- Vertical Timeline Feed Container -->
-<div class="flex flex-col gap-space-sm max-h-[580px] overflow-y-auto pr-1">
-<!-- Event 1: Latest Sinyal Pulih (Critical Recovery) -->
-<div class="bg-surface-container rounded-lg p-space-sm flex flex-col gap-space-xs border-l-2 border-error hover:bg-surface-variant transition-colors group cursor-pointer">
-<div class="flex items-center justify-between">
-<span class="px-space-xs py-0.5 rounded bg-error-container text-on-error-container font-code-tabular text-label-sm font-bold flex items-center gap-1">
-<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
-<span>14:28 WIB (TERKINI)</span>
-</span>
-<button class="text-primary hover:text-secondary font-label-sm text-label-sm flex items-center gap-0.5" type="button">
-<span>Fokus Peta</span>
-<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
-</button>
-</div>
-<div class="font-title-md text-title-md text-on-surface font-semibold">
-              Jl. Gatot Subroto No. 45, Semanggi, Jaksel
+
+            <!-- Fetch Button -->
+            <div class="xl:col-span-2">
+              <button id="btn-load-route" onclick="muatRiwayatRute()" class="w-full h-10 px-space-md rounded-lg bg-primary-container text-on-primary-container font-title-md font-bold hover:bg-secondary-container transition-colors flex items-center justify-center gap-space-sm shadow-sm active:scale-[0.99]" type="button">
+                <span class="material-symbols-outlined text-[18px]">play_circle</span>
+                <span>Muat Jejak Rute</span>
+              </button>
             </div>
-<div class="grid grid-cols-2 gap-space-xs text-on-surface-variant font-label-md text-label-md bg-surface-container-lowest/60 p-2 rounded">
-<div class="flex items-center gap-1">
-<span class="text-outline">Akurasi:</span>
-<span class="font-code-tabular text-emerald-400">±4.8 Meter</span>
-</div>
-<div class="flex items-center gap-1">
-<span class="text-outline">Baterai:</span>
-<span class="font-code-tabular text-error font-bold">12% (Kritis)</span>
-</div>
-<div class="flex items-center gap-1">
-<span class="text-outline">Status Aset:</span>
-<span class="text-primary">Terkunci Kiosk</span>
-</div>
-<div class="flex items-center gap-1">
-<span class="text-outline">Kecepatan:</span>
-<span class="font-code-tabular text-on-surface">0 km/jam (Diam)</span>
-</div>
-</div>
-</div>
-<!-- Event 2: Stop Point 3 -->
-<div class="bg-surface-container rounded-lg p-space-sm flex flex-col gap-space-xs border-l-2 border-amber-400 hover:bg-surface-variant transition-colors group cursor-pointer">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-1.5">
-<span class="px-space-xs py-0.5 rounded bg-amber-400/10 text-amber-400 font-code-tabular text-label-sm font-bold">
-                  Stop #3 (35 Menit)
-                </span>
-<span class="font-code-tabular text-label-sm text-outline">13:40 - 14:15 WIB</span>
-</div>
-<button class="text-on-surface-variant hover:text-primary font-label-sm text-label-sm" type="button">Fokus</button>
-</div>
-<div class="font-body-md text-body-md text-on-surface font-semibold">
-              Halte Bus TransJakarta Komdak, Gatot Subroto
+          </div>
+
+          <!-- Toggles & Filters Row -->
+          <div class="flex items-center justify-between flex-wrap gap-space-md pt-space-xs bg-surface-container-lowest/50 p-space-sm rounded-lg border border-surface-highest/30">
+            <div class="flex items-center gap-space-lg flex-wrap">
+              <label class="flex items-center gap-space-xs cursor-pointer select-none">
+                <input id="chk-route-stops" onchange="renderRouteHistoryVisuals()" checked class="w-4 h-4 rounded bg-surface-container-lowest accent-primary-container cursor-pointer" type="checkbox"/>
+                <span class="font-body-sm text-body-sm text-on-surface">Titik Henti (Stop Points &gt; 10 mnt)</span>
+              </label>
+              <label class="flex items-center gap-space-xs cursor-pointer select-none">
+                <input id="chk-route-polyline" onchange="renderRouteHistoryVisuals()" checked class="w-4 h-4 rounded bg-surface-container-lowest accent-primary-container cursor-pointer" type="checkbox"/>
+                <span class="font-body-sm text-body-sm text-on-surface">Garis Polyline Dinamis</span>
+              </label>
+              <label class="flex items-center gap-space-xs cursor-pointer select-none">
+                <input id="chk-route-accuracy" onchange="renderRouteHistoryVisuals()" checked class="w-4 h-4 rounded bg-surface-container-lowest accent-primary-container cursor-pointer" type="checkbox"/>
+                <span class="font-body-sm text-body-sm text-on-surface">Akurasi Radius GPS (GNSS Ellipse)</span>
+              </label>
+              <label class="flex items-center gap-space-xs cursor-pointer select-none">
+                <input id="chk-route-hide-idle" onchange="renderRouteHistoryVisuals()" class="w-4 h-4 rounded bg-surface-container-lowest accent-primary-container cursor-pointer" type="checkbox"/>
+                <span class="font-body-sm text-body-sm text-on-surface">Sembunyikan Jeda Idle (&lt; 2 km/h)</span>
+              </label>
             </div>
-<div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
-<span class="font-code-tabular text-outline">-6.2241, 106.8189</span>
-<span class="text-outline">Baterai: <strong class="text-on-surface font-code-tabular">18%</strong></span>
-</div>
-</div>
-<!-- Event 3: Stop Point 2 -->
-<div class="bg-surface-container rounded-lg p-space-sm flex flex-col gap-space-xs border-l-2 border-amber-400 hover:bg-surface-variant transition-colors group cursor-pointer">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-1.5">
-<span class="px-space-xs py-0.5 rounded bg-amber-400/10 text-amber-400 font-code-tabular text-label-sm font-bold">
-                  Stop #2 (40 Menit)
-                </span>
-<span class="font-code-tabular text-label-sm text-outline">12:10 - 12:50 WIB</span>
-</div>
-<button class="text-on-surface-variant hover:text-primary font-label-sm text-label-sm" type="button">Fokus</button>
-</div>
-<div class="font-body-md text-body-md text-on-surface font-semibold">
-              Rest Area &amp; SPBU Kuningan Barat
+            <div class="flex items-center gap-space-sm text-outline font-label-sm text-label-sm">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span>Sinkronisasi Otomatis Google Sheets (Interval 30s)</span>
             </div>
-<div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
-<span class="font-code-tabular text-outline">-6.2388, 106.8302</span>
-<span class="text-outline">Baterai: <strong class="text-on-surface font-code-tabular">35%</strong></span>
-</div>
-</div>
-<!-- Event 4: Active Waypoint in transit -->
-<div class="bg-surface-container rounded-lg p-space-sm flex flex-col gap-space-xs border-l-2 border-primary-container hover:bg-surface-variant transition-colors group cursor-pointer">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-1.5">
-<span class="px-space-xs py-0.5 rounded bg-primary-container/20 text-primary font-code-tabular text-label-sm font-semibold">
-                  Jalur Cepat
-                </span>
-<span class="font-code-tabular text-label-sm text-outline">10:15 WIB</span>
-</div>
-<button class="text-on-surface-variant hover:text-primary font-label-sm text-label-sm" type="button">Fokus</button>
-</div>
-<div class="font-body-md text-body-md text-on-surface">
-              Simpang Interchange Cawang (Menuju Tol Dalam Kota)
+          </div>
+        </div>
+
+        <!-- 4 KPI Metrics -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md">
+          <!-- KPI 1 -->
+          <div class="bg-surface-container-low rounded-xl p-space-md border border-surface-highest/50 shadow-sm flex flex-col justify-between gap-space-sm">
+            <div class="flex items-center justify-between">
+              <span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Total Jarak Tempuh</span>
+              <div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center">
+                <span class="material-symbols-outlined text-[18px] text-primary">distance</span>
+              </div>
             </div>
-<div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
-<span class="text-primary font-code-tabular font-semibold">Laju: 42 km/jam</span>
-<span class="text-outline">Baterai: <strong class="text-on-surface font-code-tabular">62%</strong></span>
-</div>
-</div>
-<!-- Event 5: Stop Point 1 -->
-<div class="bg-surface-container rounded-lg p-space-sm flex flex-col gap-space-xs border-l-2 border-amber-400 hover:bg-surface-variant transition-colors group cursor-pointer">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-1.5">
-<span class="px-space-xs py-0.5 rounded bg-amber-400/10 text-amber-400 font-code-tabular text-label-sm font-bold">
-                  Stop #1 (25 Menit)
-                </span>
-<span class="font-code-tabular text-label-sm text-outline">08:30 - 08:55 WIB</span>
-</div>
-<button class="text-on-surface-variant hover:text-primary font-label-sm text-label-sm" type="button">Fokus</button>
-</div>
-<div class="font-body-md text-body-md text-on-surface font-semibold">
-              Kantor Pos Pusat Lapangan Bekasi Barat
+            <div class="flex items-baseline gap-space-xs">
+              <span id="rh-kpi-distance" class="font-headline-xl text-headline-xl text-on-surface font-bold font-code-tabular">0.0</span>
+              <span class="font-headline-sm text-headline-sm text-primary">km</span>
             </div>
-<div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
-<span class="font-code-tabular text-outline">-6.2412, 106.9921</span>
-<span class="text-outline">Baterai: <strong class="text-on-surface font-code-tabular">88%</strong></span>
-</div>
-</div>
-<!-- Event 6: Initial Origin Start -->
-<div class="bg-surface-container rounded-lg p-space-sm flex flex-col gap-space-xs border-l-2 border-primary hover:bg-surface-variant transition-colors group cursor-pointer">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-1.5">
-<span class="px-space-xs py-0.5 rounded bg-primary/20 text-primary font-code-tabular text-label-sm font-bold">
-                  TITIK AWAL PENUGASAN
-                </span>
-<span class="font-code-tabular text-label-sm text-outline">08:00 WIB</span>
-</div>
-<button class="text-on-surface-variant hover:text-primary font-label-sm text-label-sm" type="button">Fokus</button>
-</div>
-<div class="font-body-md text-body-md text-on-surface font-semibold">
-              Depo Operasional Logistik Cikarang Dry Port
+            <div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
+              <span>Status Lintasan</span>
+              <span id="rh-kpi-distance-sub" class="text-primary font-code-tabular font-semibold">-</span>
             </div>
-<div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
-<span class="font-code-tabular text-outline">-6.3021, 107.1523</span>
-<span class="text-outline">Baterai: <strong class="text-on-surface font-code-tabular">100%</strong> (Charger AC)</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Bottom Section: Raw Telemetry Logs Table (DB_LacakHP_Pro > Log_Pelacakan) -->
-<div class="bg-surface-container-low rounded-lg p-space-md shadow-md flex flex-col gap-space-md">
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
-<div class="flex items-center gap-space-sm">
-<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center">
-<span class="material-symbols-outlined text-[18px] text-primary">table_chart</span>
-</div>
-<div class="flex flex-col">
-<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Log Telemetri GPS Mentah</h2>
-<span class="font-label-sm text-label-sm text-outline">Skema data: DB_LacakHP_Pro &gt; Log_Pelacakan (Google Apps Script Engine)</span>
-</div>
-</div>
-<div class="flex items-center gap-space-sm">
-<div class="flex items-center gap-space-xs px-space-sm py-1 rounded bg-surface-container-high font-code-tabular text-label-sm text-outline">
-<span>Total 84 Baris Log Terbaca</span>
-</div>
-<button class="h-8 px-space-sm rounded bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors font-label-sm text-label-sm flex items-center gap-1" id="toggle-table-btn" type="button">
-<span class="material-symbols-outlined text-[16px]">visibility</span>
-<span id="toggle-table-label">Tampilkan / Ciutkan</span>
-</button>
-</div>
-</div>
-<!-- Tabular Telemetry Grid -->
-<div class="overflow-x-auto" id="raw-telemetry-container">
-<table class="w-full text-left font-body-sm text-body-sm">
-<thead class="bg-surface-container-lowest text-outline font-label-sm text-label-sm uppercase tracking-wider">
-<tr>
-<th class="py-2.5 px-space-md">Waktu (WIB)</th>
-<th class="py-2.5 px-space-md">Koordinat (Latitude, Longitude)</th>
-<th class="py-2.5 px-space-md">Akurasi GNSS</th>
-<th class="py-2.5 px-space-md">Baterai &amp; Suhu</th>
-<th class="py-2.5 px-space-md">Kecepatan &amp; Jaringan</th>
-<th class="py-2.5 px-space-md">Perkiraan Alamat Geocoding</th>
-<th class="py-2.5 px-space-md text-right">Aksi</th>
-</tr>
-</thead>
-<tbody class="divide-y divide-surface-variant/40">
-<!-- Row 1 -->
-<tr class="hover:bg-surface-container transition-colors bg-error-container/10">
-<td class="py-2.5 px-space-md font-code-tabular text-error font-bold whitespace-nowrap">
-                18/03/2026 14:28:09
-              </td>
-<td class="py-2.5 px-space-md font-code-tabular text-on-surface whitespace-nowrap">
-                -6.229712, 106.817345
-              </td>
-<td class="py-2.5 px-space-md whitespace-nowrap">
-<span class="px-space-xs py-0.5 rounded bg-emerald-400/10 text-emerald-400 font-code-tabular text-label-sm font-semibold">±4.8m (18 Sat)</span>
-</td>
-<td class="py-2.5 px-space-md whitespace-nowrap">
-<span class="font-code-tabular text-error font-semibold">12%</span>
-<span class="text-outline text-label-sm font-code-tabular"> (38.5°C)</span>
-</td>
-<td class="py-2.5 px-space-md whitespace-nowrap">
-<span class="font-code-tabular text-on-surface">0 km/jam</span>
-<span class="text-outline text-label-sm font-code-tabular"> (4G LTE / Telkomsel)</span>
-</td>
-<td class="py-2.5 px-space-md text-on-surface max-w-xs truncate" title="Jl. Gatot Subroto No. 45, Semanggi, Setiabudi, Jakarta Selatan">
-                Jl. Gatot Subroto No. 45, Semanggi, Jaksel
-              </td>
-<td class="py-2.5 px-space-md text-right whitespace-nowrap">
-<button class="h-7 px-2 rounded bg-surface-container-high text-primary hover:bg-primary hover:text-on-primary font-label-sm text-label-sm transition-colors" type="button">
-                  Salin Koor
+          </div>
+
+          <!-- KPI 2 -->
+          <div class="bg-surface-container-low rounded-xl p-space-md border border-surface-highest/50 shadow-sm flex flex-col justify-between gap-space-sm">
+            <div class="flex items-center justify-between">
+              <span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Durasi Bergerak / Aktif</span>
+              <div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center">
+                <span class="material-symbols-outlined text-[18px] text-secondary">timer</span>
+              </div>
+            </div>
+            <div class="flex items-baseline gap-space-xs">
+              <span id="rh-kpi-duration" class="font-headline-xl text-headline-xl text-on-surface font-bold font-code-tabular">00:00</span>
+              <span class="font-headline-sm text-headline-sm text-on-surface-variant">Jam</span>
+            </div>
+            <div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
+              <span>Rerata Laju Armada</span>
+              <span id="rh-kpi-speed" class="text-secondary font-code-tabular font-semibold">0 km/jam</span>
+            </div>
+          </div>
+
+          <!-- KPI 3 -->
+          <div class="bg-surface-container-low rounded-xl p-space-md border border-surface-highest/50 shadow-sm flex flex-col justify-between gap-space-sm">
+            <div class="flex items-center justify-between">
+              <span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Titik Henti Terdeteksi</span>
+              <div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center">
+                <span class="material-symbols-outlined text-[18px] text-amber-400">fmd_bad</span>
+              </div>
+            </div>
+            <div class="flex items-baseline gap-space-xs">
+              <span id="rh-kpi-stops" class="font-headline-xl text-headline-xl text-on-surface font-bold font-code-tabular">0</span>
+              <span class="font-headline-sm text-headline-sm text-amber-400">Lokasi</span>
+            </div>
+            <div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
+              <span>Akumulasi Diam / Parkir</span>
+              <span id="rh-kpi-stop-duration" class="text-amber-400 font-code-tabular font-semibold">0 Mnt</span>
+            </div>
+          </div>
+
+          <!-- KPI 4 -->
+          <div class="bg-surface-container-low rounded-xl p-space-md border border-surface-highest/50 shadow-sm flex flex-col justify-between gap-space-sm">
+            <div class="flex items-center justify-between">
+              <span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Akurasi GPS &amp; Sensor</span>
+              <div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center">
+                <span class="material-symbols-outlined text-[18px] text-emerald-400">satellite_alt</span>
+              </div>
+            </div>
+            <div class="flex items-baseline gap-space-xs">
+              <span id="rh-kpi-accuracy" class="font-headline-xl text-headline-xl text-on-surface font-bold font-code-tabular">±0</span>
+              <span class="font-headline-sm text-headline-sm text-emerald-400">Meter</span>
+            </div>
+            <div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
+              <span>Jumlah Sampel Log</span>
+              <span id="rh-kpi-points-sub" class="text-emerald-400 font-code-tabular font-semibold">0 Titik GPS</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Section: Interactive Map + Timeline Split View -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md items-start">
+          <!-- Interactive Map (Col 8) -->
+          <div class="lg:col-span-8 flex flex-col gap-space-sm bg-surface-container-low rounded-xl p-space-md border border-surface-highest/50 shadow-md">
+            <!-- Map Canvas Header Bar -->
+            <div class="flex items-center justify-between flex-wrap gap-space-sm pb-space-xs">
+              <div class="flex items-center gap-space-sm flex-wrap">
+                <div class="flex items-center gap-space-xs px-space-sm py-1 rounded bg-surface-container-high text-on-surface font-code-tabular text-label-md">
+                  <span class="material-symbols-outlined text-[16px] text-primary">my_location</span>
+                  <span id="rh-corridor-label">TARGET: -</span>
+                </div>
+                <span id="rh-map-center" class="font-label-sm text-label-sm text-outline font-mono">Sumbu Peta: -</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <div class="flex items-center bg-surface-container rounded p-0.5 border border-surface-highest/50">
+                  <button id="btn-rh-layer-dark" onclick="switchRouteMapLayer('dark')" class="px-space-sm py-1 rounded bg-primary-container text-on-primary-container font-label-sm text-label-sm font-semibold" type="button">Taktis Gelap</button>
+                  <button id="btn-rh-layer-satellite" onclick="switchRouteMapLayer('satellite')" class="px-space-sm py-1 rounded text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm" type="button">Satelit OSM</button>
+                  <button id="btn-rh-layer-topo" onclick="switchRouteMapLayer('topo')" class="px-space-sm py-1 rounded text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm" type="button">Topografi</button>
+                </div>
+                <button onclick="toggleRouteMapFullscreen()" class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-on-surface hover:bg-surface-variant transition-colors" aria-label="Buka Layar Penuh" title="Buka Layar Penuh" type="button">
+                  <span class="material-symbols-outlined text-[18px]">fullscreen</span>
                 </button>
-</td>
-</tr>
-<!-- Row 2 -->
-<tr class="hover:bg-surface-container transition-colors">
-<td class="py-2.5 px-space-md font-code-tabular text-on-surface whitespace-nowrap">
-                18/03/2026 14:15:30
-              </td>
-<td class="py-2.5 px-space-md font-code-tabular text-on-surface whitespace-nowrap">
-                -6.224190, 106.818920
-              </td>
-<td class="py-2.5 px-space-md whitespace-nowrap">
-<span class="px-space-xs py-0.5 rounded bg-emerald-400/10 text-emerald-400 font-code-tabular text-label-sm font-semibold">±5.1m (16 Sat)</span>
-</td>
-<td class="py-2.5 px-space-md whitespace-nowrap">
-<span class="font-code-tabular text-amber-400 font-semibold">18%</span>
-<span class="text-outline text-label-sm font-code-tabular"> (36.1°C)</span>
-</td>
-<td class="py-2.5 px-space-md whitespace-nowrap">
-<span class="font-code-tabular text-on-surface">14 km/jam</span>
-<span class="text-outline text-label-sm font-code-tabular"> (4G LTE / Telkomsel)</span>
-</td>
-<td class="py-2.5 px-space-md text-on-surface-variant max-w-xs truncate" title="Halte Komdak Koridor 9, Jl. Jend. Gatot Subroto">
-                Halte Komdak Koridor 9, Jl. Jend. Gatot Subroto
-              </td>
-<td class="py-2.5 px-space-md text-right whitespace-nowrap">
-<button class="h-7 px-2 rounded bg-surface-container-high text-primary hover:bg-primary hover:text-on-primary font-label-sm text-label-sm transition-colors" type="button">
-                  Salin Koor
+              </div>
+            </div>
+
+            <!-- Real Leaflet Tactical Map Viewport -->
+            <div id="route-history-map-wrap" class="relative w-full h-[440px] lg:h-[540px] rounded-lg overflow-hidden bg-surface-container-lowest border border-surface-highest/50">
+              <div id="route-history-map" class="w-full h-full z-10"></div>
+
+              <!-- Empty State Overlay -->
+              <div id="rh-map-empty" class="hidden absolute inset-0 z-[450] bg-surface-container-lowest/90 backdrop-blur-sm flex flex-col items-center justify-center text-center p-6 gap-3">
+                <div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center text-primary">
+                  <span class="material-symbols-outlined text-[26px]">location_off</span>
+                </div>
+                <div class="max-w-sm">
+                  <div class="font-bold text-sm text-on-surface">Belum Ada Jejak GPS untuk Perangkat Ini</div>
+                  <p class="text-xs text-on-surface-variant mt-1">Kirim Link Pelacakan ke HP target dan pastikan GPS serta izin lokasi aktif agar koordinat tercatat ke Google Sheets.</p>
+                </div>
+                <button type="button" onclick="kirimLinkPelacakan(document.getElementById('routeHistoryDeviceSelect')?.value || AppState.selectedTargetImei)" class="px-4 py-2 rounded-lg bg-primary-container text-on-primary-container font-bold text-xs flex items-center gap-1.5 shadow">
+                  <span class="material-symbols-outlined text-[16px]">share_location</span>
+                  <span>Kirim Link Pelacakan ke HP Ini</span>
                 </button>
-</td>
-</tr>
-<!-- Row 3 -->
-<tr class="hover:bg-surface-container transition-colors">
-<td class="py-2.5 px-space-md font-code-tabular text-on-surface whitespace-nowrap">
-                18/03/2026 13:40:02
-              </td>
-<td class="py-2.5 px-space-md font-code-tabular text-on-surface whitespace-nowrap">
-                -6.224105, 106.818902
-              </td>
-<td class="py-2.5 px-space-md whitespace-nowrap">
-<span class="px-space-xs py-0.5 rounded bg-emerald-400/10 text-emerald-400 font-code-tabular text-label-sm font-semibold">±4.2m (19 Sat)</span>
-</td>
-<td class="py-2.5 px-space-md whitespace-nowrap">
-<span class="font-code-tabular text-amber-400 font-semibold">24%</span>
-<span class="text-outline text-label-sm font-code-tabular"> (35.8°C)</span>
-</td>
-<td class="py-2.5 px-space-md whitespace-nowrap">
-<span class="font-code-tabular text-on-surface">0 km/jam</span>
-<span class="text-outline text-label-sm font-code-tabular"> (4G LTE / Telkomsel)</span>
-</td>
-<td class="py-2.5 px-space-md text-on-surface-variant max-w-xs truncate" title="Jalur Lambat Gatot Subroto Menuju SCBD">
-                Jalur Lambat Gatot Subroto Menuju SCBD
-              </td>
-<td class="py-2.5 px-space-md text-right whitespace-nowrap">
-<button class="h-7 px-2 rounded bg-surface-container-high text-primary hover:bg-primary hover:text-on-primary font-label-sm text-label-sm transition-colors" type="button">
-                  Salin Koor
+              </div>
+
+              <!-- Floating Map Zoom & Recenter Controls -->
+              <div class="absolute right-3 top-3 z-[400] flex flex-col gap-2">
+                <div class="flex flex-col bg-surface-container-high/90 backdrop-blur rounded-lg p-1 shadow-lg border border-surface-highest/60">
+                  <button onclick="AppState.routeMap && AppState.routeMap.zoomIn()" class="w-8 h-8 flex items-center justify-center text-on-surface hover:text-primary hover:bg-surface-container transition-colors rounded" aria-label="Perbesar Peta" type="button">
+                    <span class="material-symbols-outlined text-[18px]">add</span>
+                  </button>
+                  <div class="h-px bg-surface-variant w-full my-0.5"></div>
+                  <button onclick="AppState.routeMap && AppState.routeMap.zoomOut()" class="w-8 h-8 flex items-center justify-center text-on-surface hover:text-primary hover:bg-surface-container transition-colors rounded" aria-label="Perkecil Peta" type="button">
+                    <span class="material-symbols-outlined text-[18px]">remove</span>
+                  </button>
+                </div>
+                <button onclick="recenterRouteMap()" class="w-8 h-8 rounded-lg bg-surface-container-high/90 backdrop-blur flex items-center justify-center text-primary hover:bg-surface-container transition-colors shadow-lg border border-surface-highest/60" aria-label="Pusatkan Rute" title="Pusatkan ke Rute" type="button">
+                  <span class="material-symbols-outlined text-[18px]">near_me</span>
                 </button>
-</td>
-</tr>
-<!-- Row 4 -->
-<tr class="hover:bg-surface-container transition-colors">
-<td class="py-2.5 px-space-md font-code-tabular text-on-surface whitespace-nowrap">
-                18/03/2026 12:10:45
-              </td>
-<td class="py-2.5 px-space-md font-code-tabular text-on-surface whitespace-nowrap">
-                -6.238841, 106.830219
-              </td>
-<td class="py-2.5 px-space-md whitespace-nowrap">
-<span class="px-space-xs py-0.5 rounded bg-emerald-400/10 text-emerald-400 font-code-tabular text-label-sm font-semibold">±5.5m (17 Sat)</span>
-</td>
-<td class="py-2.5 px-space-md whitespace-nowrap">
-<span class="font-code-tabular text-on-surface font-semibold">35%</span>
-<span class="text-outline text-label-sm font-code-tabular"> (34.0°C)</span>
-</td>
-<td class="py-2.5 px-space-md whitespace-nowrap">
-<span class="font-code-tabular text-on-surface">0 km/jam</span>
-<span class="text-outline text-label-sm font-code-tabular"> (4G LTE / Indosat)</span>
-</td>
-<td class="py-2.5 px-space-md text-on-surface-variant max-w-xs truncate" title="SPBU &amp; Kawasan Niaga Kuningan Barat">
-                SPBU &amp; Kawasan Niaga Kuningan Barat
-              </td>
-<td class="py-2.5 px-space-md text-right whitespace-nowrap">
-<button class="h-7 px-2 rounded bg-surface-container-high text-primary hover:bg-primary hover:text-on-primary font-label-sm text-label-sm transition-colors" type="button">
-                  Salin Koor
+              </div>
+
+              <!-- Bottom Floating Map Telemetry Legend -->
+              <div class="absolute left-3 bottom-3 z-[400] px-space-md py-1.5 rounded-lg bg-surface-container-high/90 backdrop-blur shadow-lg border border-surface-highest/60 flex flex-wrap items-center gap-space-md text-label-sm font-label-sm">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-3 h-1 bg-primary rounded-full"></span>
+                  <span class="text-on-surface">Rute Aktif Bergerak</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                  <span class="text-on-surface">Titik Berhenti (&gt;10m)</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                  <span class="text-on-surface">Posisi Terkini / Pulih</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Simulation Playback & Speed Controls (VCR Bar) -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md bg-surface-container p-space-sm rounded-lg border border-surface-highest/40">
+              <div class="flex items-center gap-space-sm">
+                <button id="btn-play-sim" onclick="toggleRoutePlayback()" class="w-9 h-9 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center hover:bg-secondary-container transition-colors" aria-label="Putar Simulasi Rute" type="button">
+                  <span class="material-symbols-outlined text-[20px]">play_arrow</span>
                 </button>
-</td>
-</tr>
-<!-- Row 5 -->
-<tr class="hover:bg-surface-container transition-colors">
-<td class="py-2.5 px-space-md font-code-tabular text-on-surface whitespace-nowrap">
-                18/03/2026 10:15:18
-              </td>
-<td class="py-2.5 px-space-md font-code-tabular text-on-surface whitespace-nowrap">
-                -6.248901, 106.868733
-              </td>
-<td class="py-2.5 px-space-md whitespace-nowrap">
-<span class="px-space-xs py-0.5 rounded bg-emerald-400/10 text-emerald-400 font-code-tabular text-label-sm font-semibold">±6.0m (15 Sat)</span>
-</td>
-<td class="py-2.5 px-space-md whitespace-nowrap">
-<span class="font-code-tabular text-on-surface font-semibold">62%</span>
-<span class="text-outline text-label-sm font-code-tabular"> (33.5°C)</span>
-</td>
-<td class="py-2.5 px-space-md whitespace-nowrap">
-<span class="font-code-tabular text-primary font-semibold">42 km/jam</span>
-<span class="text-outline text-label-sm font-code-tabular"> (4G LTE / Telkomsel)</span>
-</td>
-<td class="py-2.5 px-space-md text-on-surface-variant max-w-xs truncate" title="Interchange Cawang, Tol Jakarta-Cikampek KM 02">
-                Interchange Cawang, Tol Jkt-Cikampek KM 02
-              </td>
-<td class="py-2.5 px-space-md text-right whitespace-nowrap">
-<button class="h-7 px-2 rounded bg-surface-container-high text-primary hover:bg-primary hover:text-on-primary font-label-sm text-label-sm transition-colors" type="button">
-                  Salin Koor
+                <button onclick="resetRoutePlayback()" class="w-9 h-9 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-center hover:bg-surface-variant transition-colors" aria-label="Ulangi Playback Rute" type="button">
+                  <span class="material-symbols-outlined text-[18px]">replay</span>
                 </button>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<!-- Pagination & Status footer of the table -->
-<div class="flex items-center justify-between pt-space-xs text-label-sm font-label-sm text-outline border-t border-surface-variant/30">
-<div class="flex items-center gap-space-sm">
-<span>Menampilkan 5 dari 84 titik terekam</span>
-<span class="w-1 h-1 rounded-full bg-outline"></span>
-<span>Buffer GAS Synchronized: OK</span>
-</div>
-<div class="flex items-center gap-1">
-<button class="w-7 h-7 rounded bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center" type="button">
-<span class="material-symbols-outlined text-[14px]">chevron_left</span>
-</button>
-<span class="px-2 py-0.5 rounded bg-surface-container-high font-code-tabular text-primary">Hal 1 / 17</span>
-<button class="w-7 h-7 rounded bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center" type="button">
-<span class="material-symbols-outlined text-[14px]">chevron_right</span>
-</button>
-</div>
-</div>
-</div>
-</div>
-</div>
-<script>
-  // Simple micro-interactions for simulation and toggle collapsible table
-  document.addEventListener('DOMContentLoaded', () => {
-    const playBtn = document.getElementById('btn-play-sim');
-    let isPlaying = false;
-    if (playBtn) {
-      playBtn.addEventListener('click', () => {
-        isPlaying = !isPlaying;
-        const icon = playBtn.querySelector('.material-symbols-outlined');
-        if (icon) {
-          icon.textContent = isPlaying ? 'pause' : 'play_arrow';
-        }
-      });
-    }
+                <div class="flex flex-col">
+                  <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Simulasi Putar Rute</span>
+                  <span id="rh-playback-status" class="font-code-tabular text-body-sm text-primary font-semibold">Belum ada waypoint</span>
+                </div>
+              </div>
 
-    const toggleTableBtn = document.getElementById('toggle-table-btn');
-    const tableContainer = document.getElementById('raw-telemetry-container');
-    if (toggleTableBtn && tableContainer) {
-      toggleTableBtn.addEventListener('click', () => {
-        if (tableContainer.style.display === 'none') {
-          tableContainer.style.display = 'block';
-        } else {
-          tableContainer.style.display = 'none';
-        }
-      });
-    }
-  });
-</script>
-      </div>
+              <!-- Progress scrubber -->
+              <div class="flex-1 max-w-md flex items-center gap-space-sm px-space-sm">
+                <span id="rh-time-start" class="font-code-tabular text-label-sm text-outline">--:--</span>
+                <input id="rh-playback-slider" type="range" min="0" max="0" value="0" oninput="seekRoutePlayback(this.value)" aria-label="Penggeser Waktu Rute" class="w-full"/>
+                <span id="rh-time-end" class="font-code-tabular text-label-sm text-primary">--:--</span>
+              </div>
 
-      <!-- Mobile Chronological View (< 1024px) -->
-      <div class="flex lg:hidden w-full max-w-md mx-auto flex-col gap-4 text-on-surface">
-        <div class="flex flex-col w-full gap-space-lg">
-<!-- Target Header & Selector Card -->
-<section class="bg-surface-container rounded-lg p-space-lg shadow-sm flex flex-col gap-space-md">
-<div class="flex items-start justify-between gap-space-sm">
-<div class="flex flex-col min-w-0">
-<div class="flex items-center gap-space-xs mb-1">
-<span class="material-symbols-outlined text-primary text-[18px]">verified_user</span>
-<span class="font-code-tabular text-code-tabular text-primary font-semibold tracking-wide">356789012345678</span>
-</div>
-<h1 class="font-headline-sm text-headline-sm text-on-surface truncate">Siti Aminah</h1>
-<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Xiaomi Redmi 13 • Divisi Kurir Logistik</p>
-</div>
-<div class="flex flex-col items-end gap-space-xs flex-shrink-0">
-<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-error-container/20 text-error">
-<span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
-<span class="font-label-sm text-label-sm uppercase tracking-wider">Insiden Terkunci</span>
-</div>
-<span class="font-label-sm text-label-sm text-secondary">GPS Pulih (L2)</span>
-</div>
-</div>
-<!-- Date & Interval Picker Filter -->
-<div class="bg-surface-container-low rounded-lg p-space-sm flex items-center justify-between gap-space-sm">
-<div class="flex items-center gap-space-xs min-w-0">
-<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary-container flex-shrink-0">
-<span class="material-symbols-outlined text-[18px]">calendar_today</span>
-</div>
-<div class="flex flex-col min-w-0">
-<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Rentang Pelacakan</span>
-<span class="font-title-md text-title-md text-on-surface truncate">18/03/2026 • 08:00 - 14:30 WIB</span>
-</div>
-</div>
-<div class="flex items-center gap-1 flex-shrink-0">
-<button class="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors active:scale-95" id="btn-export" title="Ekspor Log Riwayat">
-<span class="material-symbols-outlined text-[18px]">ios_share</span>
-</button>
-<button class="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg bg-surface-container text-primary hover:bg-surface-container-high transition-colors active:scale-95" id="btn-filter" title="Filter Rute">
-<span class="material-symbols-outlined text-[18px]">tune</span>
-</button>
-</div>
-</div>
-</section>
-<!-- 2x2 Telemetry Metric Matrix -->
-<section class="grid grid-cols-2 gap-space-sm w-full">
-<div class="bg-surface-container rounded-lg p-space-md flex flex-col gap-1 shadow-sm">
-<div class="flex items-center justify-between text-on-surface-variant">
-<span class="font-label-sm text-label-sm uppercase tracking-wide">Total Lintasan</span>
-<span class="material-symbols-outlined text-[16px] text-primary">route</span>
-</div>
-<div class="flex items-baseline gap-1 mt-0.5">
-<span class="font-headline-md text-headline-md text-on-surface font-semibold">38.4</span>
-<span class="font-label-sm text-label-sm text-on-surface-variant">KM</span>
-</div>
-<span class="font-label-sm text-label-sm text-primary-container mt-1">Efisiensi Rute 91%</span>
-</div>
-<div class="bg-surface-container rounded-lg p-space-md flex flex-col gap-1 shadow-sm">
-<div class="flex items-center justify-between text-on-surface-variant">
-<span class="font-label-sm text-label-sm uppercase tracking-wide">Durasi Aktif</span>
-<span class="material-symbols-outlined text-[16px] text-secondary">schedule</span>
-</div>
-<div class="flex items-baseline gap-1 mt-0.5">
-<span class="font-headline-md text-headline-md text-on-surface font-semibold">04:25</span>
-<span class="font-label-sm text-label-sm text-on-surface-variant">JAM</span>
-</div>
-<span class="font-label-sm text-label-sm text-on-surface-variant mt-1">Laju Rata-rata 24 km/j</span>
-</div>
-<div class="bg-surface-container rounded-lg p-space-md flex flex-col gap-1 shadow-sm">
-<div class="flex items-center justify-between text-on-surface-variant">
-<span class="font-label-sm text-label-sm uppercase tracking-wide">Titik Henti</span>
-<span class="material-symbols-outlined text-[16px] text-on-surface-variant">front_hand</span>
-</div>
-<div class="flex items-baseline gap-1 mt-0.5">
-<span class="font-headline-md text-headline-md text-on-surface font-semibold">5</span>
-<span class="font-label-sm text-label-sm text-on-surface-variant">LOKASI</span>
-</div>
-<span class="font-label-sm text-label-sm text-on-surface-variant mt-1">Diam Total 1j 12m</span>
-</div>
-<div class="bg-surface-container rounded-lg p-space-md flex flex-col gap-1 shadow-sm">
-<div class="flex items-center justify-between text-on-surface-variant">
-<span class="font-label-sm text-label-sm uppercase tracking-wide">Akurasi GPS</span>
-<span class="material-symbols-outlined text-[16px] text-primary">cell_tower</span>
-</div>
-<div class="flex items-baseline gap-1 mt-0.5">
-<span class="font-headline-md text-headline-md text-on-surface font-semibold">±5.2</span>
-<span class="font-label-sm text-label-sm text-on-surface-variant">METER</span>
-</div>
-<span class="font-label-sm text-label-sm text-primary mt-1">18 Satelit Triangulasi</span>
-</div>
-</section>
-<!-- Interactive Tactical Map & Playback HUD -->
-<section class="bg-surface-container rounded-lg p-space-sm flex flex-col gap-space-sm shadow-sm">
-<div class="flex items-center justify-between px-space-xs pt-space-xs">
-<div class="flex items-center gap-space-xs">
-<span class="material-symbols-outlined text-primary text-[18px]">hub</span>
-<span class="font-title-md text-title-md text-on-surface">Visualisasi Breadcrumbs</span>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
-<span class="font-label-sm text-label-sm text-primary uppercase font-bold tracking-wider">Live Trail L1+L5</span>
-</div>
-</div>
-<!-- Map Canvas Container with Overlaid UI -->
-<div class="relative w-full h-[280px] bg-surface-container-lowest rounded-lg overflow-hidden flex flex-col justify-between p-space-sm">
-<!-- Static Visual Mock Canvas with SVG Waypoint Overlay -->
-<div class="absolute inset-0 w-full h-full bg-cover bg-center opacity-65" data-location="Semanggi Interchange, Jakarta, Indonesia" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCug3SbIdrmBBlEkoOnAY53gE2sRJ8QbakkFDSI9tgeMpyggUJBVUpWs467qPrODShPLXMZvSTOBihaEVUQmw5JGyq-nVyBd4l9RtVUS_LUee3obU3remKjrh_BtUSO5wsWcapytyU3w7239fUD_i5ToqCVD_YzK4t9RyZL9WZdSjos8nkm6UVe2dTfVszBZTvKR30smxcD3JZivcg65RfFG0akuY_kywXMKUa6hg')"></div>
-<!-- Vector Polyline & Breadcrumbs Graphics -->
-<svg class="absolute inset-0 w-full h-full pointer-events-none" viewbox="0 0 358 280" xmlns="http://www.w3.org/2000/svg">
-<defs>
-<lineargradient id="routeGlow" x1="0%" x2="100%" y1="100%" y2="0%">
-<stop offset="0%" stop-color="#38BDF8" stop-opacity="0.3"></stop>
-<stop offset="50%" stop-color="#38BDF8" stop-opacity="0.9"></stop>
-<stop offset="100%" stop-color="#F43F5E" stop-opacity="1"></stop>
-</lineargradient>
-<filter height="140%" id="neonBlur" width="140%" x="-20%" y="-20%">
-<fegaussianblur result="blur" stddeviation="3"></fegaussianblur>
-<femerge>
-<femergenode in="blur"></femergenode>
-<femergenode in="SourceGraphic"></femergenode>
-</femerge>
-</filter>
-</defs>
-<!-- Route Shadow/Glow Path -->
-<path d="M 28 238 Q 72 205 110 182 T 195 130 T 260 98 L 305 60" fill="none" filter="url(#neonBlur)" stroke="#00a2e6" stroke-linecap="round" stroke-opacity="0.3" stroke-width="4"></path>
-<!-- Main Route Path -->
-<path d="M 28 238 Q 72 205 110 182 T 195 130 T 260 98 L 305 60" fill="none" id="routeTrail" stroke="url(#routeGlow)" stroke-dasharray="4 2" stroke-linecap="round" stroke-width="2.5"></path>
-<!-- Waypoint: Origin -->
-<circle cx="28" cy="238" fill="#171f33" r="6" stroke="#8ed5ff" stroke-width="2"></circle>
-<circle cx="28" cy="238" fill="#8ed5ff" r="2.5"></circle>
-<!-- Waypoint: Stop 1 -->
-<circle cx="110" cy="182" fill="#171f33" r="5" stroke="#89ceff" stroke-width="1.5"></circle>
-<text fill="#dae2fd" font-family="Plus Jakarta Sans" font-size="7" font-weight="700" text-anchor="middle" x="110" y="185">1</text>
-<!-- Waypoint: Stop 2 -->
-<circle cx="195" cy="130" fill="#171f33" r="5" stroke="#89ceff" stroke-width="1.5"></circle>
-<text fill="#dae2fd" font-family="Plus Jakarta Sans" font-size="7" font-weight="700" text-anchor="middle" x="195" y="133">2</text>
-<!-- Waypoint: Stop 3 -->
-<circle cx="260" cy="98" fill="#171f33" r="5" stroke="#89ceff" stroke-width="1.5"></circle>
-<text fill="#dae2fd" font-family="Plus Jakarta Sans" font-size="7" font-weight="700" text-anchor="middle" x="260" y="101">3</text>
-<!-- Waypoint: Emergency / Last Known Location -->
-<circle class="animate-ping" cx="305" cy="60" fill="#93000a" fill-opacity="0.3" r="14" style="transform-origin: 305px 60px;"></circle>
-<circle cx="305" cy="60" fill="#171f33" r="8" stroke="#ffb4ab" stroke-width="2"></circle>
-<circle cx="305" cy="60" fill="#ffb4ab" r="3.5"></circle>
-</svg>
-<!-- Floating Map Layer & Viewport Controls -->
-<div class="relative z-10 flex justify-between items-start">
-<div class="bg-surface-container-high/90 backdrop-blur-md px-2.5 py-1 rounded-md flex items-center gap-1.5 text-on-surface shadow-sm">
-<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
-<span class="font-code-tabular text-code-tabular">-6.22384, 106.81892</span>
-</div>
-<div class="flex flex-col gap-1.5">
-<button class="w-9 h-9 rounded-lg bg-surface-container-high/90 backdrop-blur-md flex items-center justify-center text-on-surface-variant hover:text-on-surface shadow-sm active:scale-95 transition-all" id="toggle-layer" title="Ubah Lapisan Peta">
-<span class="material-symbols-outlined text-[18px]">layers</span>
-</button>
-<button class="w-9 h-9 rounded-lg bg-surface-container-high/90 backdrop-blur-md flex items-center justify-center text-primary-container hover:text-primary shadow-sm active:scale-95 transition-all" id="btn-recenter" title="Pusatkan Posisi Terkini">
-<span class="material-symbols-outlined text-[18px]">my_location</span>
-</button>
-</div>
-</div>
-<!-- Overlaid Telemetry Simulation Bar -->
-<div class="relative z-10 bg-surface-container-high/95 backdrop-blur-lg rounded-lg p-2.5 flex flex-col gap-2 shadow-md">
-<div class="flex items-center justify-between text-on-surface-variant">
-<div class="flex items-center gap-2">
-<button aria-label="Putar Simulasi Rute" class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center transition-transform active:scale-90" id="btn-playback">
-<span class="material-symbols-outlined text-[20px]" id="play-icon" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
-</button>
-<div class="flex flex-col">
-<span class="font-label-sm text-label-sm text-on-surface font-semibold tracking-wider" id="playback-clock">14:28:10 WIB</span>
-<span class="font-label-sm text-label-sm text-on-surface-variant">Laju Simulasi</span>
-</div>
-</div>
-<div class="flex items-center gap-1">
-<button class="px-2 py-1 rounded bg-surface-container text-on-surface font-code-tabular text-code-tabular hover:bg-surface-container-highest transition-colors" id="speed-toggle">1x</button>
-<button class="p-1 rounded text-on-surface-variant hover:text-on-surface transition-colors" id="btn-reset-scrubber" title="Mulai Ulang">
-<span class="material-symbols-outlined text-[16px]">replay</span>
-</button>
-</div>
-</div>
-<!-- Scrubber Progress Bar -->
-<div class="flex flex-col gap-1 w-full">
-<input aria-label="Linimasa Perjalanan" class="w-full h-1.5 bg-surface-variant rounded-full appearance-none cursor-pointer accent-primary-container focus:outline-none" id="route-scrubber" max="100" min="0" type="range" value="96"/>
-<div class="flex justify-between items-center font-label-sm text-label-sm text-on-surface-variant px-0.5">
-<span>08:00 (Depo)</span>
-<span class="text-primary font-mono">11:15</span>
-<span class="text-error font-mono font-semibold">14:28 (Kritis)</span>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- Chronological Waypoints & Incident Trail Sheet -->
-<section class="bg-surface-container rounded-lg p-space-lg shadow-sm flex flex-col gap-space-md">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-space-xs">
-<span class="material-symbols-outlined text-primary text-[18px]">timeline</span>
-<h2 class="font-title-md text-title-md text-on-surface">Kronologi Titik Singgah &amp; Stop Points</h2>
-</div>
-<button class="font-label-sm text-label-sm text-primary hover:underline" id="btn-toggle-all">Perluas Semua</button>
-</div>
-<!-- Timeline Flow -->
-<div class="flex flex-col gap-space-md relative pl-3">
-<!-- Continuous Timeline Stroke Indicator (Background Element) -->
-<div class="absolute left-[17px] top-3 bottom-3 w-0.5 bg-surface-container-highest"></div>
-<!-- Point 1: TERKINI & KRITIS -->
-<div class="relative flex items-start gap-space-md">
-<div class="relative z-10 w-7 h-7 rounded-full bg-error-container/30 flex items-center justify-center flex-shrink-0 mt-0.5">
-<span class="w-3.5 h-3.5 rounded-full bg-error animate-pulse"></span>
-</div>
-<div class="bg-surface-container-high rounded-lg p-space-md flex-1 flex flex-col gap-1.5 shadow-sm">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-1.5">
-<span class="font-title-md text-title-md text-error font-bold">14:28 WIB</span>
-<span class="px-1.5 py-0.5 rounded bg-error text-on-error font-label-sm text-label-sm uppercase font-semibold">Terkini</span>
-</div>
-<span class="font-label-sm text-label-sm text-on-surface-variant">Diam 24 Menit</span>
-</div>
-<p class="font-body-md text-body-md text-on-surface font-medium leading-snug">Jl. Gatot Subroto No. 45, Semanggi (Depan Gedung Graha Telekom)</p>
-<div class="grid grid-cols-2 gap-2 mt-1 pt-2 bg-surface-container-lowest/50 rounded-lg p-2 text-on-surface-variant">
-<div class="flex items-center gap-1.5">
-<span class="material-symbols-outlined text-[16px] text-error">lock</span>
-<span class="font-label-sm text-label-sm text-on-surface">Kiosk Lockdown Aktif</span>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="material-symbols-outlined text-[16px] text-error">battery_1_bar</span>
-<span class="font-label-sm text-label-sm text-error font-semibold">Daya 12% (Kritis)</span>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="material-symbols-outlined text-[16px] text-primary">gps_fixed</span>
-<span class="font-code-tabular text-code-tabular">Akurasi ±4.8m</span>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="material-symbols-outlined text-[16px] text-secondary">sim_card_download</span>
-<span class="font-code-tabular text-code-tabular">Cell ID: 510-10</span>
-</div>
-</div>
-<div class="flex items-center justify-end gap-space-sm mt-1">
-<button class="min-h-[44px] px-3 py-1.5 rounded-lg bg-error text-on-error font-label-sm text-label-sm font-semibold flex items-center gap-1 active:scale-95 transition-transform" onclick="alert('Kirim sinyal sirene darurat 110dB ke perangkat IMEI: 356789012345678');">
-<span class="material-symbols-outlined text-[16px]">volume_up</span>
-<span>Bunyikan Sirene</span>
-</button>
-</div>
-</div>
-</div>
-<!-- Point 2: Stop Point #3 -->
-<div class="relative flex items-start gap-space-md">
-<div class="relative z-10 w-7 h-7 rounded-full bg-surface-container-highest flex items-center justify-center flex-shrink-0 mt-0.5 text-primary">
-<span class="font-label-sm text-label-sm font-bold">3</span>
-</div>
-<div class="bg-surface-container-low rounded-lg p-space-md flex-1 flex flex-col gap-1 shadow-sm">
-<div class="flex items-center justify-between">
-<span class="font-title-md text-title-md text-on-surface">13:40 - 14:15 WIB</span>
-<span class="font-label-sm text-label-sm text-primary px-2 py-0.5 rounded bg-primary/10">35 Menit Diam</span>
-</div>
-<p class="font-body-md text-body-md text-on-surface">Halte Komdak Barat, Jalur Busway</p>
-<div class="flex items-center justify-between text-on-surface-variant text-body-sm mt-1">
-<span class="flex items-center gap-1">
-<span class="material-symbols-outlined text-[14px]">battery_2_bar</span>
-              Baterai 18%
-            </span>
-<span class="font-code-tabular text-code-tabular">-6.22510, 106.81640</span>
-</div>
-</div>
-</div>
-<!-- Point 3: Stop Point #2 -->
-<div class="relative flex items-start gap-space-md">
-<div class="relative z-10 w-7 h-7 rounded-full bg-surface-container-highest flex items-center justify-center flex-shrink-0 mt-0.5 text-primary">
-<span class="font-label-sm text-label-sm font-bold">2</span>
-</div>
-<div class="bg-surface-container-low rounded-lg p-space-md flex-1 flex flex-col gap-1 shadow-sm">
-<div class="flex items-center justify-between">
-<span class="font-title-md text-title-md text-on-surface">12:10 - 12:50 WIB</span>
-<span class="font-label-sm text-label-sm text-primary px-2 py-0.5 rounded bg-primary/10">40 Menit Diam</span>
-</div>
-<p class="font-body-md text-body-md text-on-surface">SPBU 34-12902 Kuningan Barat (Istirahat &amp; Pengecekan)</p>
-<div class="flex items-center justify-between text-on-surface-variant text-body-sm mt-1">
-<span class="flex items-center gap-1">
-<span class="material-symbols-outlined text-[14px]">battery_4_bar</span>
-              Baterai 35%
-            </span>
-<span class="font-code-tabular text-code-tabular">-6.23920, 106.82900</span>
-</div>
-</div>
-</div>
-<!-- Point 4: Fast Transit Waypoint -->
-<div class="relative flex items-start gap-space-md">
-<div class="relative z-10 w-7 h-7 rounded-full bg-surface-container-highest flex items-center justify-center flex-shrink-0 mt-0.5 text-secondary">
-<span class="material-symbols-outlined text-[14px]">speed</span>
-</div>
-<div class="bg-surface-container-low rounded-lg p-space-md flex-1 flex flex-col gap-1 shadow-sm">
-<div class="flex items-center justify-between">
-<span class="font-title-md text-title-md text-on-surface">10:15 WIB</span>
-<span class="font-code-tabular text-code-tabular text-secondary bg-secondary/10 px-2 py-0.5 rounded">42 km/jam</span>
-</div>
-<p class="font-body-md text-body-md text-on-surface">Simpang Cawang Elevated • Telemetri Seluler Stabil</p>
-<div class="flex items-center justify-between text-on-surface-variant text-body-sm mt-1">
-<span class="flex items-center gap-1">
-<span class="material-symbols-outlined text-[14px]">cell_tower</span>
-              LTE Cat-4 B3
-            </span>
-<span class="font-code-tabular text-code-tabular">-6.24810, 106.86240</span>
-</div>
-</div>
-</div>
-<!-- Point 5: Origin Waypoint -->
-<div class="relative flex items-start gap-space-md">
-<div class="relative z-10 w-7 h-7 rounded-full bg-surface-container-highest flex items-center justify-center flex-shrink-0 mt-0.5 text-on-surface-variant">
-<span class="material-symbols-outlined text-[15px]">flag</span>
-</div>
-<div class="bg-surface-container-low rounded-lg p-space-md flex-1 flex flex-col gap-1 shadow-sm">
-<div class="flex items-center justify-between">
-<span class="font-title-md text-title-md text-on-surface">08:00 WIB</span>
-<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">Titik Keberangkatan</span>
-</div>
-<p class="font-body-md text-body-md text-on-surface">Depo Cikarang Dry Port • Gerbang Logistik 02</p>
-<div class="flex items-center justify-between text-on-surface-variant text-body-sm mt-1">
-<span class="flex items-center gap-1">
-<span class="material-symbols-outlined text-[14px]">battery_full</span>
-              Baterai 98%
-            </span>
-<span class="font-code-tabular text-code-tabular">-6.27310, 107.15010</span>
-</div>
-</div>
-</div>
-</div>
-<!-- Quick Footer Actions -->
-<div class="flex flex-col gap-space-xs mt-2">
-<button class="min-h-[44px] w-full rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-primary flex items-center justify-center gap-space-xs transition-colors active:scale-98" id="btn-view-raw-log">
-<span class="material-symbols-outlined text-[18px]">terminal</span>
-<span class="font-label-lg text-label-lg font-semibold">Buka Log Mentah Telemetri NMEA</span>
-</button>
-<button class="min-h-[44px] w-full rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center gap-space-xs transition-colors active:scale-98 shadow-sm" onclick="alert('Menginisiasi unduhan paket bukti digital riwayat IMEI: 356789012345678');">
-<span class="material-symbols-outlined text-[18px]">download_for_offline</span>
-<span class="font-label-lg text-label-lg font-semibold">Unduh Bukti Rute (KML / PDF)</span>
-</button>
-</div>
-</section>
-</div>
-<script>
-  (function () {
-    const playBtn = document.getElementById('btn-playback');
-    const playIcon = document.getElementById('play-icon');
-    const scrubber = document.getElementById('route-scrubber');
-    const clock = document.getElementById('playback-clock');
-    const speedBtn = document.getElementById('speed-toggle');
-    const recenterBtn = document.getElementById('btn-recenter');
-    const layerBtn = document.getElementById('toggle-layer');
-    const resetScrubberBtn = document.getElementById('btn-reset-scrubber');
+              <!-- Speed Controls -->
+              <div class="flex items-center gap-1">
+                <span class="font-label-sm text-label-sm text-outline mr-1">Kecepatan:</span>
+                <button id="btn-rh-speed-1" onclick="setRoutePlaybackSpeed(1)" class="px-2 py-1 rounded bg-surface-container-high text-on-surface-variant hover:text-on-surface font-code-tabular text-label-sm" type="button">1x</button>
+                <button id="btn-rh-speed-2" onclick="setRoutePlaybackSpeed(2)" class="px-2 py-1 rounded bg-primary-container text-on-primary-container font-code-tabular text-label-sm font-bold" type="button">2x</button>
+                <button id="btn-rh-speed-4" onclick="setRoutePlaybackSpeed(4)" class="px-2 py-1 rounded bg-surface-container-high text-on-surface-variant hover:text-on-surface font-code-tabular text-label-sm" type="button">4x</button>
+              </div>
+            </div>
+          </div>
 
-    let isPlaying = false;
-    let playTimer = null;
-    let currentSpeed = 1;
+          <!-- Right Column: Chronological Waypoints & Stop Points (Col 4) -->
+          <div class="lg:col-span-4 flex flex-col gap-space-sm bg-surface-container-low rounded-xl p-space-md border border-surface-highest/50 shadow-md h-full">
+            <div class="flex items-center justify-between pb-space-xs border-b border-surface-highest/40">
+              <div class="flex flex-col">
+                <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Kronologi Waypoint &amp; Titik Henti</h2>
+                <span class="font-label-sm text-label-sm text-outline">Diurutkan dari event terbaru</span>
+              </div>
+              <span id="rh-segments-count" class="px-space-xs py-0.5 rounded bg-surface-container-high text-secondary font-code-tabular text-label-sm font-semibold">0 Segmen</span>
+            </div>
 
-    const timeSteps = [
-      "08:00:00 WIB",
-      "09:12:30 WIB",
-      "10:15:00 WIB",
-      "11:30:20 WIB",
-      "12:10:00 WIB",
-      "13:40:15 WIB",
-      "14:28:10 WIB"
-    ];
+            <!-- Vertical Timeline Feed Container -->
+            <div id="rh-timeline-list" class="flex flex-col gap-space-sm max-h-[580px] overflow-y-auto pr-1">
+              <div class="py-8 text-center text-xs text-outline">Pilih perangkat untuk melihat kronologi waypoint.</div>
+            </div>
+          </div>
+        </div>
 
-    function updateClockByValue(val) {
-      const idx = Math.min(
-        Math.floor((val / 100) * timeSteps.length),
-        timeSteps.length - 1
-      );
-      clock.textContent = timeSteps[idx];
-    }
+        <!-- Bottom Section: Raw Telemetry Logs Table (DB_LacakHP_Pro > Log_Pelacakan) -->
+        <div class="bg-surface-container-low rounded-xl p-space-md border border-surface-highest/50 shadow-md flex flex-col gap-space-md">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center">
+                <span class="material-symbols-outlined text-[18px] text-primary">table_chart</span>
+              </div>
+              <div class="flex flex-col">
+                <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Log Telemetri GPS Mentah</h2>
+                <span class="font-label-sm text-label-sm text-outline">Skema data: DB_LacakHP_Pro &gt; Log_Pelacakan (Google Apps Script Engine)</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-space-sm">
+              <div class="flex items-center gap-space-xs px-space-sm py-1 rounded bg-surface-container-high font-code-tabular text-label-sm text-outline">
+                <span id="rh-log-total">Total 0 Baris Log Terbaca</span>
+              </div>
+              <button onclick="toggleRouteRawTable()" class="h-8 px-space-sm rounded bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors font-label-sm text-label-sm flex items-center gap-1" id="toggle-table-btn" type="button">
+                <span class="material-symbols-outlined text-[16px]">visibility</span>
+                <span id="toggle-table-label">Tampilkan / Ciutkan</span>
+              </button>
+            </div>
+          </div>
 
-    playBtn?.addEventListener('click', () => {
-      isPlaying = !isPlaying;
-      if (isPlaying) {
-        playIcon.textContent = 'pause';
-        playTimer = setInterval(() => {
-          let curVal = parseInt(scrubber.value, 10);
-          if (curVal >= 100) {
-            curVal = 0;
-          } else {
-            curVal += 2 * currentSpeed;
-          }
-          scrubber.value = curVal;
-          updateClockByValue(curVal);
-        }, 150);
-      } else {
-        playIcon.textContent = 'play_arrow';
-        clearInterval(playTimer);
-      }
-    });
+          <!-- Accessible Tabular Telemetry Grid -->
+          <div id="raw-telemetry-container" class="table-wrapper overflow-x-auto" tabindex="0" role="region" aria-label="Log Telemetri GPS Mentah">
+            <table class="w-full text-left font-body-sm text-body-sm">
+              <thead class="bg-surface-container-lowest text-outline font-label-sm text-label-sm uppercase tracking-wider">
+                <tr>
+                  <th class="py-2.5 px-space-md">Waktu (WIB)</th>
+                  <th class="py-2.5 px-space-md">Koordinat (Latitude, Longitude)</th>
+                  <th class="py-2.5 px-space-md">Akurasi GNSS</th>
+                  <th class="py-2.5 px-space-md">Baterai</th>
+                  <th class="py-2.5 px-space-md">Estimasi Laju</th>
+                  <th class="py-2.5 px-space-md">Status / Catatan</th>
+                  <th class="py-2.5 px-space-md text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="rh-raw-tbody" class="divide-y divide-surface-variant/40">
+                <tr>
+                  <td colspan="7" class="py-6 text-center text-xs text-outline">Belum ada data log pelacakan.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-    scrubber?.addEventListener('input', (e) => {
-      updateClockByValue(e.target.value);
-    });
+          <!-- Pagination & Status Footer -->
+          <div class="flex items-center justify-between pt-space-xs text-label-sm font-label-sm text-outline border-t border-surface-variant/30">
+            <div class="flex items-center gap-space-sm">
+              <span id="rh-page-summary">Menampilkan 0 titik terekam</span>
+              <span class="w-1 h-1 rounded-full bg-outline"></span>
+              <span>Buffer GAS Synchronized</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <button onclick="changeRouteTablePage(-1)" class="w-8 h-8 rounded bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center" aria-label="Halaman Sebelumnya" type="button">
+                <span class="material-symbols-outlined text-[14px]">chevron_left</span>
+              </button>
+              <span id="rh-page-indicator" class="px-2.5 py-1 rounded bg-surface-container-high font-code-tabular text-primary">Hal 1 / 1</span>
+              <button onclick="changeRouteTablePage(1)" class="w-8 h-8 rounded bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center" aria-label="Halaman Berikutnya" type="button">
+                <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+              </button>
+            </div>
+          </div>
+        </div>
 
-    speedBtn?.addEventListener('click', () => {
-      if (currentSpeed === 1) {
-        currentSpeed = 2;
-        speedBtn.textContent = '2x';
-      } else if (currentSpeed === 2) {
-        currentSpeed = 4;
-        speedBtn.textContent = '4x';
-      } else {
-        currentSpeed = 1;
-        speedBtn.textContent = '1x';
-      }
-    });
-
-    resetScrubberBtn?.addEventListener('click', () => {
-      scrubber.value = 0;
-      updateClockByValue(0);
-      if (isPlaying) {
-        playBtn.click();
-      }
-    });
-
-    recenterBtn?.addEventListener('click', () => {
-      recenterBtn.classList.add('rotate-45');
-      setTimeout(() => recenterBtn.classList.remove('rotate-45'), 300);
-    });
-
-    layerBtn?.addEventListener('click', () => {
-      layerBtn.classList.toggle('text-primary');
-    });
-
-    const exportBtn = document.getElementById('btn-export');
-    exportBtn?.addEventListener('click', () => {
-      alert('Mengekspor arsip data CSV/XLS pelacakan untuk periode 18/03/2026.');
-    });
-
-    const rawLogBtn = document.getElementById('btn-view-raw-log');
-    rawLogBtn?.addEventListener('click', () => {
-      alert('Membuka 1,420 baris telemetri mentah $GPRMC, $GPGGA, serta status Cell Towers.');
-    });
-  })();
-</script>
       </div>
     </section>
 
@@ -2631,7 +1967,8 @@
       </div>
     </section>
 
-  </main>
+    </main>
+  </div>
 
   <!-- ========================================================================
        MODAL: BOTTOM SHEET DAFTARKAN PERANGKAT BARU (STITCH BOTTOM SHEET)
