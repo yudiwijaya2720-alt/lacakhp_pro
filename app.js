@@ -662,11 +662,16 @@ function fokusRutePerangkat(imei) {
   const d = AppState.devices.find(x => x.imei === imei);
   if (!d) return;
 
+  AppState.selectedTargetImei = imei;
   if (AppState.activeTab !== 'live-tracking') {
     navigateToTab('live-tracking');
   }
   if (!AppState.map) {
     initLeafletMap();
+  }
+  if (!d.lat || !d.lng) {
+    showToast(`Perangkat ${d.nama} (${d.imei}) belum memiliki koordinat GPS (0, 0). Aktifkan pelacakan di HP staf terlebih dahulu.`, 'warning');
+    return;
   }
   if (AppState.map) {
     setTimeout(() => {
@@ -694,8 +699,23 @@ async function loadDashboardData() {
     renderLiveTelemetryTable();
     renderAlertsPanel();
     renderMasterDeviceCards();
-  renderMasterDeviceTable();
+    renderMasterDeviceTable();
     renderDeviceMarkers();
+    populateRouteHistorySelect();
+  }
+}
+
+function populateRouteHistorySelect() {
+  const sel = document.getElementById('routeHistoryDeviceSelect');
+  if (!sel || !AppState.devices.length) return;
+  const prev = sel.value;
+  sel.innerHTML = AppState.devices.map(d =>
+    `<option value="${escapeHtml(d.imei)}">${escapeHtml(d.imei)} - ${escapeHtml(d.nama)} (${escapeHtml(d.tipe)} / ${escapeHtml(d.divisi)})</option>`
+  ).join('');
+  if (prev && AppState.devices.some(d => d.imei === prev)) {
+    sel.value = prev;
+  } else if (AppState.selectedTargetImei && AppState.devices.some(d => d.imei === AppState.selectedTargetImei)) {
+    sel.value = AppState.selectedTargetImei;
   }
 }
 
@@ -1310,6 +1330,7 @@ async function handleLoginSubmit(e) {
     showToast(`Selamat datang, ${res.name}!`, 'success');
     if (res.role === 'STAFF') {
       AppState.currentStaffImei = res.imei;
+      localStorage.setItem('lacakhp_staff_imei', res.imei);
       navigateToTab('staff-client');
     } else {
       navigateToTab('live-tracking');
@@ -1716,8 +1737,13 @@ function lacakDeviceById(imei) {
   const device = AppState.devices.find(d => d.imei === imei);
   if (!device) return;
 
+  AppState.selectedTargetImei = imei;
   navigateToTab('live-tracking');
   if (!AppState.map) initLeafletMap();
+  if (!device.lat || !device.lng) {
+    tampilkanToast(`Perangkat ${device.nama} (${device.imei}) belum mengirim koordinat GPS (0, 0).`, 'warning');
+    return;
+  }
   if (AppState.map && typeof AppState.map.setView === 'function') {
     setTimeout(() => {
       AppState.map.invalidateSize();
