@@ -505,11 +505,11 @@ function initLeafletMap() {
     attribution: '© Google Maps Satelit'
   });
 
-  // 3. Cyber Dark Layer (CartoDB Dark)
-  mapTileLayers.dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  // 3. Cyber Dark Layer (OpenStreetMap + Cyber Dark Filter, tanpa API Key)
+  mapTileLayers.dark = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
-    subdomains: 'abcd',
-    attribution: '© CartoDB'
+    className: 'cyber-dark-tiles',
+    attribution: '© OpenStreetMap'
   });
 
   // Set Google Maps Roadmap sebagai layer aktif default

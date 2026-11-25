@@ -81,6 +81,10 @@ body {
   font-family: var(--font-sans) !important;
 }
 
+.cyber-dark-tiles {
+  filter: invert(100%) hue-rotate(180deg) brightness(92%) contrast(90%);
+}
+
 .leaflet-bar a {
   background-color: #171f33 !important;
   color: #8ed5ff !important;
