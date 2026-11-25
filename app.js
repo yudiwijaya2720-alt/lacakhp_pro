@@ -14,8 +14,10 @@
 // ============================================================================
 // 1. STATE & KONFIGURASI GLOBAL
 // ============================================================================
+const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbxGE-g3SPs6JYn46aN8f7yJ9wovsei03eNFwSVn9KEApM5LyoeVz0auo3xnzRd1xrc1/exec';
+
 const AppState = {
-  gasUrl: localStorage.getItem('https://script.google.com/macros/s/AKfycbxGE-g3SPs6JYn46aN8f7yJ9wovsei03eNFwSVn9KEApM5LyoeVz0auo3xnzRd1xrc1/exec') || '',
+  gasUrl: localStorage.getItem('lacakhp_gas_url') || DEFAULT_GAS_URL,
   user: JSON.parse(localStorage.getItem('lacakhp_user') || 'null'),
   activeTab: 'live-tracking', // 'live-tracking' | 'master-devices' | 'staff-client' | 'remote-command' | 'signal-recovery' | 'incidents'
   devices: [],
@@ -164,6 +166,10 @@ const MOCK_DATA = {
     }
   ]
 };
+
+AppState.devices = MOCK_DATA.devices;
+AppState.kpi = { ...MOCK_DATA.kpi };
+AppState.alerts = MOCK_DATA.recentAlerts;
 
 // ============================================================================
 // 3. REST API CLIENT (gas-pro-api ANTI-CORS PATTERN)
@@ -457,25 +463,114 @@ function navigateToTab(tabId) {
 }
 
 // ============================================================================
-// 6. INISIALISASI PETA LEAFLET (DARK CYBER COMMAND CENTER)
+// 6. INISIALISASI PETA GOOGLE MAPS (GNSS LIVE RADAR COMMAND CENTER)
 // ============================================================================
+let activeTileLayer = null;
+const mapTileLayers = {};
+
 function initLeafletMap() {
   const mapContainer = document.getElementById('leaflet-map');
-  if (!mapContainer || AppState.map) return;
+  if (!mapContainer) return;
+  if (typeof L === 'undefined') {
+    showToast('Library peta Leaflet gagal dimuat. Periksa koneksi internet.', 'error');
+    return;
+  }
+  
+  if (AppState.map) {
+    setTimeout(() => AppState.map.invalidateSize(), 100);
+    return;
+  }
 
+  // Inisialisasi peta Leaflet dengan center Jakarta Pusat
   AppState.map = L.map('leaflet-map', {
     zoomControl: false,
-    attributionControl: false
+    attributionControl: false,
+    fadeAnimation: true
   }).setView([-6.2118, 106.8462], 13);
 
+  // Kontrol zoom di kanan atas
   L.control.zoom({ position: 'topright' }).addTo(AppState.map);
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19,
-    subdomains: 'abcd'
-  }).addTo(AppState.map);
+  // 1. Google Maps Roadmap Layer (Standard Google Maps dengan jalan, nama tempat, tol)
+  mapTileLayers.roadmap = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+    attribution: '© Google Maps'
+  });
 
+  // 2. Google Maps Hybrid Layer (Citra Satelit berlabel jalan Google Maps)
+  mapTileLayers.hybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+    attribution: '© Google Maps Satelit'
+  });
+
+  // 3. Cyber Dark Layer (CartoDB Dark)
+  mapTileLayers.dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+    subdomains: 'abcd',
+    attribution: '© CartoDB'
+  });
+
+  // Set Google Maps Roadmap sebagai layer aktif default
+  activeTileLayer = mapTileLayers.roadmap;
+  activeTileLayer.addTo(AppState.map);
+
+  // Fallback otomatis ke OpenStreetMap jika tile Google gagal dimuat
+  let googleTileErrorCount = 0;
+  mapTileLayers.roadmap.on('tileerror', () => {
+    googleTileErrorCount++;
+    if (googleTileErrorCount === 3 && activeTileLayer === mapTileLayers.roadmap) {
+      AppState.map.removeLayer(activeTileLayer);
+      activeTileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(AppState.map);
+    }
+  });
+
+  // Render semua marker perangkat
   renderDeviceMarkers();
+
+  // Resize listener agar peta selalu presisi saat ukuran layar berubah
+  window.addEventListener('resize', () => {
+    if (AppState.map) AppState.map.invalidateSize();
+  });
+
+  // Trigger invalidateSize bertahap untuk memastikan tiles Google Maps ter-render 100%
+  setTimeout(() => { if (AppState.map) AppState.map.invalidateSize(); }, 150);
+  setTimeout(() => { if (AppState.map) AppState.map.invalidateSize(); }, 500);
+  setTimeout(() => { if (AppState.map) AppState.map.invalidateSize(); }, 1200);
+}
+
+function switchMapLayer(layerKey) {
+  if (!AppState.map || !mapTileLayers[layerKey]) return;
+
+  if (activeTileLayer) {
+    AppState.map.removeLayer(activeTileLayer);
+  }
+
+  activeTileLayer = mapTileLayers[layerKey];
+  activeTileLayer.addTo(AppState.map);
+
+  // Update styling tombol aktif
+  ['roadmap', 'hybrid', 'dark'].forEach(k => {
+    const btn = document.getElementById(`btn-layer-${k}`);
+    if (btn) {
+      if (k === layerKey) {
+        btn.className = 'px-2.5 py-1 rounded-md bg-primary-container text-on-primary-container font-bold flex items-center gap-1 transition shadow-sm';
+      } else {
+        btn.className = 'px-2.5 py-1 rounded-md text-slate-300 hover:text-white flex items-center gap-1 transition';
+      }
+    }
+  });
+
+  const layerNames = {
+    roadmap: 'Google Maps (Roadmap)',
+    hybrid: 'Google Maps Satelit (Hybrid)',
+    dark: 'Cyber Dark Mode'
+  };
+  showToast(`Peta dialihkan ke: ${layerNames[layerKey] || layerKey}`, 'info');
 }
 
 function renderDeviceMarkers() {
@@ -565,12 +660,24 @@ function renderDeviceMarkers() {
 
 function fokusRutePerangkat(imei) {
   const d = AppState.devices.find(x => x.imei === imei);
-  if (!d || !AppState.map) return;
+  if (!d) return;
 
-  AppState.map.setView([d.lat, d.lng], 16, { animate: true });
-  if (AppState.markers[imei]) {
-    AppState.markers[imei].openPopup();
+  if (AppState.activeTab !== 'live-tracking') {
+    navigateToTab('live-tracking');
   }
+  if (!AppState.map) {
+    initLeafletMap();
+  }
+  if (AppState.map) {
+    setTimeout(() => {
+      AppState.map.invalidateSize();
+      AppState.map.setView([d.lat, d.lng], 16, { animate: true });
+      if (AppState.markers[imei]) {
+        AppState.markers[imei].openPopup();
+      }
+    }, 180);
+  }
+  showToast(`Memusatkan peta ke: ${d.nama} (${d.imei})`, 'info');
 }
 
 // ============================================================================
@@ -1029,14 +1136,32 @@ function renderStaffClientUI() {
   }
 }
 
+function startStaffTracking() {
+  stopStaffTracking();
+  kirimPingTelemetri();
+  AppState.watchId = setInterval(() => {
+    if (AppState.dutyActive) {
+      kirimPingTelemetri();
+    }
+  }, 15000);
+}
+
+function stopStaffTracking() {
+  if (AppState.watchId) {
+    clearInterval(AppState.watchId);
+    AppState.watchId = null;
+  }
+}
+
 function toggleStaffDuty() {
   AppState.dutyActive = !AppState.dutyActive;
   localStorage.setItem('lacakhp_duty_active', AppState.dutyActive);
 
   if (AppState.dutyActive) {
-    kirimPingTelemetri();
-    showToast('Jam Tugas Dimulai. Transmisi koordinat GPS aktif.', 'success');
+    startStaffTracking();
+    showToast('Jam Tugas Dimulai. Transmisi koordinat GPS aktif setiap 15 detik.', 'success');
   } else {
+    stopStaffTracking();
     showToast('Jam Tugas Dihentikan. Transmisi GPS dinonaktifkan.', 'info');
   }
 
@@ -1052,7 +1177,10 @@ async function kirimPingTelemetri() {
   if ('geolocation' in navigator) {
     try {
       const pos = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 6000 });
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 6000
+        });
       });
       lat = pos.coords.latitude;
       lng = pos.coords.longitude;
@@ -1067,10 +1195,27 @@ async function kirimPingTelemetri() {
     } catch (e) {}
   }
 
-  callApi('ping', {
+  const res = await callApi('ping', {
     imei: AppState.currentStaffImei,
     lat, lng, acc, bat
   });
+
+  const localDev = AppState.devices.find(d => d.imei === AppState.currentStaffImei);
+  if (localDev) {
+    localDev.lat = lat;
+    localDev.lng = lng;
+    localDev.akurasi = acc;
+    localDev.baterai = bat;
+    if (localDev.status !== 'Hilang') localDev.status = 'Online';
+    localDev.lastSeenRelative = 'Baru saja';
+  }
+  renderDeviceMarkers();
+  renderLiveTelemetryTable();
+  renderKPIStats();
+  if (AppState.activeTab === 'staff-client') {
+    renderStaffClientUI();
+  }
+  return res;
 }
 
 // ============================================================================
@@ -1200,6 +1345,9 @@ function bukaHalamanLogin() {
 function tutupHalamanLogin() {
   const el = document.getElementById('login-overlay');
   if (el) el.style.display = 'none';
+  if (AppState.map) {
+    setTimeout(() => AppState.map.invalidateSize(), 150);
+  }
 }
 
 // ============================================================================
@@ -1268,6 +1416,10 @@ function showToast(message, type = 'info') {
   }, 3500);
 }
 
+function tampilkanToast(message, type = 'info') {
+  return showToast(message, type);
+}
+
 function salinTeks(teks, label = 'Teks') {
   if (navigator.clipboard) {
     navigator.clipboard.writeText(teks).then(() => {
@@ -1287,10 +1439,33 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDashboardData();
 
   if (!AppState.user) {
-    bukaHalamanLogin();
+    // Sesi default Admin Dispatcher agar Google Maps langsung tampil tanpa halangan login
+    AppState.user = {
+      role: 'ADMIN',
+      name: 'Capt. Raditya M. (Lead Dispatcher)',
+      token: 'session-demo'
+    };
+    localStorage.setItem('lacakhp_user', JSON.stringify(AppState.user));
+    tutupHalamanLogin();
+    navigateToTab('live-tracking');
   } else {
     tutupHalamanLogin();
     navigateToTab('live-tracking');
+  }
+  
+  // Pastikan render peta aktif
+  setTimeout(() => {
+    if (AppState.map) AppState.map.invalidateSize();
+  }, 300);
+
+  // Sinkronisasi otomatis dashboard setiap 15 detik
+  if (AppState.pollTimer) clearInterval(AppState.pollTimer);
+  AppState.pollTimer = setInterval(() => {
+    if (!AppState.isFetching) loadDashboardData();
+  }, 15000);
+
+  if (AppState.dutyActive) {
+    startStaffTracking();
   }
 
   // Filter chips master perangkat
@@ -1542,14 +1717,16 @@ function lacakDeviceById(imei) {
   if (!device) return;
 
   navigateToTab('live-tracking');
+  if (!AppState.map) initLeafletMap();
   if (AppState.map && typeof AppState.map.setView === 'function') {
-    AppState.map.setView([device.lat, device.lng], 16, { animate: true });
-    
-    // Buka popup marker jika ada
-    const marker = AppState.markers[imei];
-    if (marker && typeof marker.openPopup === 'function') {
-      marker.openPopup();
-    }
+    setTimeout(() => {
+      AppState.map.invalidateSize();
+      AppState.map.setView([device.lat, device.lng], 16, { animate: true });
+      const marker = AppState.markers[imei];
+      if (marker && typeof marker.openPopup === 'function') {
+        marker.openPopup();
+      }
+    }, 180);
   }
   tampilkanToast(`Memusatkan peta ke perangkat: ${device.nama} (${device.imei})`, 'info');
 }
@@ -1657,7 +1834,7 @@ function tutupLayarKioskLock() {
 }
 
 function hubungiAdminPusatKiosk() {
-  const adminWa = AppState.config.adminWa || '081199887711';
+  const adminWa = AppState.config?.adminWa || '081199887711';
   window.location.href = `tel:${adminWa}`;
 }
 
