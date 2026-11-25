@@ -132,6 +132,9 @@
         --:--:-- WIB
       </div>
 
+      <!-- Active User Label -->
+      <span id="navbar-user-label" class="hidden md:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-container border border-surface-highest/60 text-xs text-primary font-semibold">-</span>
+
       <!-- Settings Endpoint Button -->
       <button onclick="bukaModalSettings()" title="Konfigurasi URL Google Apps Script" class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-slate-300 hover:text-white hover:bg-surface-highest transition border border-surface-highest/50">
         <span class="material-symbols-outlined text-[18px]">tune</span>
@@ -148,23 +151,23 @@
   <!-- Mobile Bottom Switcher Bar (Mobile Navigation Bar) -->
   <nav class="xl:hidden fixed bottom-0 inset-x-0 z-40 pb-safe bg-surface-container-low/95 backdrop-blur-xl border-t border-surface-container-high shadow-lg">
     <div class="h-16 px-1 flex items-center justify-around">
-      <button onclick="navigateToTab('live-tracking')" class="flex-1 h-full flex flex-col items-center justify-center gap-0.5 text-on-surface-variant hover:text-on-surface transition-colors">
+      <button onclick="navigateToTab('live-tracking')" data-nav-tab="live-tracking" class="flex-1 h-full flex flex-col items-center justify-center gap-0.5 text-on-surface-variant hover:text-on-surface transition-colors">
         <span class="material-symbols-outlined text-[20px]">location_searching</span>
         <span class="text-[10px] tracking-wider uppercase font-semibold">Pantau</span>
       </button>
-      <button onclick="navigateToTab('master-devices')" class="flex-1 h-full flex flex-col items-center justify-center gap-0.5 text-primary-container font-semibold">
+      <button onclick="navigateToTab('master-devices')" data-nav-tab="master-devices" class="flex-1 h-full flex flex-col items-center justify-center gap-0.5 text-primary-container font-semibold">
         <span class="material-symbols-outlined text-[20px]">devices</span>
         <span class="text-[10px] tracking-wider uppercase">Aset</span>
       </button>
-      <button onclick="navigateToTab('remote-command')" class="flex-1 h-full flex flex-col items-center justify-center gap-0.5 text-rose-300 font-semibold">
+      <button onclick="navigateToTab('remote-command')" data-nav-tab="remote-command" class="flex-1 h-full flex flex-col items-center justify-center gap-0.5 text-rose-300 font-semibold">
         <span class="material-symbols-outlined text-[20px]">crisis_alert</span>
         <span class="text-[10px] tracking-wider uppercase">OTA</span>
       </button>
-      <button onclick="navigateToTab('signal-recovery')" class="flex-1 h-full flex flex-col items-center justify-center gap-0.5 text-on-surface-variant hover:text-on-surface">
+      <button onclick="navigateToTab('signal-recovery')" data-nav-tab="signal-recovery" class="flex-1 h-full flex flex-col items-center justify-center gap-0.5 text-on-surface-variant hover:text-on-surface">
         <span class="material-symbols-outlined text-[20px]">cell_tower</span>
         <span class="text-[10px] tracking-wider uppercase">Insiden</span>
       </button>
-      <button onclick="navigateToTab('staff-client')" class="flex-1 h-full flex flex-col items-center justify-center gap-0.5 text-sky-400 font-bold">
+      <button onclick="navigateToTab('staff-client')" data-nav-tab="staff-client" class="flex-1 h-full flex flex-col items-center justify-center gap-0.5 text-sky-400 font-bold">
         <span class="material-symbols-outlined text-[20px]">smartphone</span>
         <span class="text-[10px] tracking-wider uppercase">HP Staf</span>
       </button>
@@ -675,10 +678,7 @@
 <div class="relative">
 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-primary">phonelink_setup</span>
 <select id="routeHistoryDeviceSelect" class="w-full h-10 pl-9 pr-8 bg-surface-container-lowest text-on-surface font-body-sm text-body-sm rounded-lg outline-none focus:bg-surface-container transition-colors cursor-pointer appearance-none">
-<option selected="" value="356789012345678">356789012345678 - Siti Aminah (Xiaomi Redmi 13 / Divisi Kurir JKT)</option>
-<option value="358912345678901">358912345678901 - Budi Santoso (Samsung Galaxy A15 / Logistik Regional)</option>
-<option value="862451098765432">862451098765432 - Hendra Setiawan (POCO M6 Pro / Patroli Aset)</option>
-<option value="351234987654321">351234987654321 - Maya Puspita (Infinix Hot 40 / Koordinator Tim)</option>
+<option value="">Memuat daftar perangkat...</option>
 </select>
 <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] text-outline pointer-events-none">expand_more</span>
 </div>
@@ -1850,22 +1850,25 @@
 <!-- Field 1: Target Perangkat -->
 <div class="flex flex-col gap-space-xs">
 <div class="flex items-center justify-between">
-<label class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold">Target Perangkat</label>
-<span class="font-label-sm text-label-sm text-primary">Status: Terverifikasi di Peta</span>
+<label class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold" for="desktop-ota-target-select">Target Perangkat</label>
+<span class="font-label-sm text-label-sm text-primary">Pilih dari Master Perangkat</span>
 </div>
+<select id="desktop-ota-target-select" onchange="pilihTargetOTA(this.value)" class="w-full bg-surface-container-lowest text-on-surface text-xs px-3 py-2 rounded-lg border border-surface-highest/60 focus:outline-none focus:border-primary cursor-pointer">
+<option value="">Pilih perangkat target...</option>
+</select>
 <div class="flex items-center justify-between px-space-md py-space-sm rounded-lg bg-surface-container-lowest text-on-surface">
 <div class="flex items-center gap-space-md min-w-0">
 <span class="material-symbols-outlined text-[18px] text-primary-container shrink-0">devices</span>
 <div class="flex items-center gap-space-xs flex-wrap font-body-sm text-body-sm min-w-0">
-<span class="font-code-tabular text-code-tabular text-on-surface font-semibold" id="form-target-imei">IMEI 358912345678901</span>
+<span class="font-code-tabular text-code-tabular text-on-surface font-semibold" id="form-target-imei">IMEI -</span>
 <span class="text-outline">—</span>
-<span class="font-semibold text-on-surface" id="form-target-name">Budi Santoso</span>
-<span class="text-on-surface-variant text-label-md">(Divisi Lapangan - Samsung A15)</span>
+<span class="font-semibold text-on-surface" id="form-target-name">Belum dipilih</span>
+<span class="text-on-surface-variant text-label-md" id="form-target-meta">(-)</span>
 </div>
 </div>
 <div class="flex items-center gap-space-xs shrink-0 pl-space-sm">
-<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-<span class="font-label-sm text-label-sm text-emerald-400 uppercase font-bold">Online 94%</span>
+<span class="w-2 h-2 rounded-full bg-slate-400" id="form-target-status-dot"></span>
+<span class="font-label-sm text-label-sm text-slate-300 uppercase font-bold" id="form-target-status">-</span>
 </div>
 </div>
 </div>
@@ -1917,7 +1920,7 @@
 <span class="material-symbols-outlined text-[18px]">send</span>
 <span>Kirim Perintah ke HP</span>
 </button>
-<button class="w-full sm:w-auto bg-error-container hover:bg-error text-on-surface font-title-md text-title-md font-bold px-6 py-2.5 rounded-lg transition-transform active:scale-95 shadow-md flex items-center justify-center gap-space-xs" onclick="reopenSirenModal()" type="button">
+<button class="w-full sm:w-auto bg-error-container hover:bg-error text-on-surface font-title-md text-title-md font-bold px-6 py-2.5 rounded-lg transition-transform active:scale-95 shadow-md flex items-center justify-center gap-space-xs" onclick="tandaiTargetHilang()" type="button">
 <span class="material-symbols-outlined text-[18px]">fmd_bad</span>
 <span>Tandai Status HILANG &amp; Picu WhatsApp Alert</span>
 </button>
@@ -1934,32 +1937,32 @@
 <span class="px-space-xs py-0.5 rounded bg-surface-container text-primary font-label-sm text-label-sm">LIVE PING</span>
 </div>
 <!-- Mini Map Viewport -->
-<div class="w-full h-36 bg-surface-container rounded-lg relative overflow-hidden flex items-end p-space-sm" data-location="Jakarta Pusat, Indonesia">
+<div class="w-full h-36 bg-surface-container rounded-lg relative overflow-hidden flex items-end p-space-sm">
 <div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/90 via-surface-container-lowest/30 to-transparent"></div>
 <div class="relative z-10 flex items-center justify-between w-full">
 <div class="flex items-center gap-space-xs">
 <span class="material-symbols-outlined text-[16px] text-tertiary">location_on</span>
-<span class="font-code-tabular text-code-tabular text-on-surface">-6.1754, 106.8272</span>
+<span class="font-code-tabular text-code-tabular text-on-surface" id="inspector-coords">-</span>
 </div>
-<span class="font-label-sm text-label-sm text-outline">Radius: 8m</span>
+<span class="font-label-sm text-label-sm text-outline" id="inspector-radius">Radius: -</span>
 </div>
 </div>
 <div class="flex flex-col gap-space-xs pt-space-xs">
 <div class="flex items-center justify-between py-1 bg-surface-container-lowest px-space-md rounded">
 <span class="font-body-sm text-body-sm text-outline">Baterai HP</span>
-<span class="font-code-tabular text-code-tabular text-on-surface font-semibold">94% (Sedang Mengisi)</span>
+<span class="font-code-tabular text-code-tabular text-on-surface font-semibold" id="inspector-battery">-</span>
 </div>
 <div class="flex items-center justify-between py-1 bg-surface-container-lowest px-space-md rounded">
-<span class="font-body-sm text-body-sm text-outline">Jaringan Seluler</span>
-<span class="font-code-tabular text-code-tabular text-on-surface font-semibold">Telkomsel 4G LTE (-82 dBm)</span>
+<span class="font-body-sm text-body-sm text-outline">Status Perangkat</span>
+<span class="font-code-tabular text-code-tabular text-on-surface font-semibold" id="inspector-network">-</span>
 </div>
 <div class="flex items-center justify-between py-1 bg-surface-container-lowest px-space-md rounded">
-<span class="font-body-sm text-body-sm text-outline">Nomor SIM Aktif</span>
-<span class="font-code-tabular text-code-tabular text-on-surface font-semibold">+62 812-4455-8890</span>
+<span class="font-body-sm text-body-sm text-outline">No. WhatsApp</span>
+<span class="font-code-tabular text-code-tabular text-on-surface font-semibold" id="inspector-wa">-</span>
 </div>
 <div class="flex items-center justify-between py-1 bg-surface-container-lowest px-space-md rounded">
-<span class="font-body-sm text-body-sm text-outline">Versi Agen Tracker</span>
-<span class="font-code-tabular text-code-tabular text-primary font-semibold">v3.8.4-PRO (Enforced)</span>
+<span class="font-body-sm text-body-sm text-outline">Update Terakhir</span>
+<span class="font-code-tabular text-code-tabular text-primary font-semibold" id="inspector-lastseen">-</span>
 </div>
 </div>
 </div>
@@ -1984,7 +1987,7 @@
 </div>
 <div class="flex items-center gap-space-sm">
 <div class="flex items-center gap-space-xs px-space-sm py-1 rounded bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm">
-<span id="log-counter">Total Broadcast: 24 Sesi</span>
+<span id="log-counter">Total Broadcast: 0 Sesi</span>
 </div>
 <button class="px-space-md py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-md text-label-md flex items-center gap-space-xs transition-colors">
 <span class="material-symbols-outlined text-[16px]">file_download</span>
@@ -2007,157 +2010,8 @@
 </tr>
 </thead>
 <tbody class="divide-y-0 text-on-surface" id="transmission-log-body">
-<!-- Row 1 (Target Focus) -->
-<tr class="hover:bg-surface-container transition-colors bg-surface-container/30">
-<td class="py-space-md px-space-lg font-code-tabular text-code-tabular text-on-surface whitespace-nowrap">
-                18/03/2026 14:20 WIB
-              </td>
-<td class="py-space-md px-space-md font-code-tabular text-code-tabular text-primary whitespace-nowrap">
-                356789012345678
-              </td>
-<td class="py-space-md px-space-md font-semibold whitespace-nowrap">
-                Siti Aminah
-                <span class="block font-label-sm text-label-sm text-outline font-normal">Kurir Logistik A-12</span>
-</td>
-<td class="py-space-md px-space-md whitespace-nowrap">
-<span class="px-space-sm py-1 rounded bg-error-container/30 text-tertiary font-label-sm text-label-sm font-bold flex items-center gap-1 w-max">
-<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
-                  Kunci Layar HP Hilang
-                </span>
-</td>
-<td class="py-space-md px-space-md max-w-xs truncate text-on-surface-variant" title="Aset Dinas Hilang - Hubungi Admin di 081199887711">
-                Aset Dinas Hilang - Hubungi Admin di 081199887711
-              </td>
-<td class="py-space-md px-space-md whitespace-nowrap">
-<span class="px-space-sm py-1 rounded bg-emerald-950 text-emerald-400 font-label-sm text-label-sm font-semibold flex items-center gap-1.5 w-max">
-<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  Terkirim &amp; Terbaca di Layar HP
-                </span>
-</td>
-<td class="py-space-md px-space-lg text-right whitespace-nowrap">
-<div class="flex items-center justify-end gap-space-xs">
-<button class="px-space-sm py-1 rounded bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-sm text-label-sm transition-colors">
-                    Kirim Ulang
-                  </button>
-<button class="px-space-sm py-1 rounded bg-surface-container hover:bg-surface-container-high text-primary font-label-sm text-label-sm transition-colors">
-                    Detail Respon
-                  </button>
-</div>
-</td>
-</tr>
-<!-- Row 2 -->
-<tr class="hover:bg-surface-container transition-colors">
-<td class="py-space-md px-space-lg font-code-tabular text-code-tabular text-on-surface whitespace-nowrap">
-                18/03/2026 13:45 WIB
-              </td>
-<td class="py-space-md px-space-md font-code-tabular text-code-tabular text-primary whitespace-nowrap">
-                358912345678901
-              </td>
-<td class="py-space-md px-space-md font-semibold whitespace-nowrap">
-                Budi Santoso
-                <span class="block font-label-sm text-label-sm text-outline font-normal">Teknisi Wilayah II</span>
-</td>
-<td class="py-space-md px-space-md whitespace-nowrap">
-<span class="px-space-sm py-1 rounded bg-surface-container-high text-secondary font-label-sm text-label-sm font-semibold flex items-center gap-1 w-max">
-<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-                  Pesan Biasa (Info Operasional)
-                </span>
-</td>
-<td class="py-space-md px-space-md max-w-xs truncate text-on-surface-variant" title="Instruksi Dispatch: Lakukan pengecekan BTS Manggarai segera.">
-                Instruksi Dispatch: Lakukan pengecekan BTS Manggarai segera.
-              </td>
-<td class="py-space-md px-space-md whitespace-nowrap">
-<span class="px-space-sm py-1 rounded bg-emerald-950 text-emerald-400 font-label-sm text-label-sm font-semibold flex items-center gap-1.5 w-max">
-<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  Terkirim &amp; Terbaca di Layar HP
-                </span>
-</td>
-<td class="py-space-md px-space-lg text-right whitespace-nowrap">
-<div class="flex items-center justify-end gap-space-xs">
-<button class="px-space-sm py-1 rounded bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-sm text-label-sm transition-colors">
-                    Kirim Ulang
-                  </button>
-<button class="px-space-sm py-1 rounded bg-surface-container hover:bg-surface-container-high text-primary font-label-sm text-label-sm transition-colors">
-                    Detail Respon
-                  </button>
-</div>
-</td>
-</tr>
-<!-- Row 3 -->
-<tr class="hover:bg-surface-container transition-colors">
-<td class="py-space-md px-space-lg font-code-tabular text-code-tabular text-on-surface whitespace-nowrap">
-                18/03/2026 11:15 WIB
-              </td>
-<td class="py-space-md px-space-md font-code-tabular text-code-tabular text-primary whitespace-nowrap">
-                352345678901234
-              </td>
-<td class="py-space-md px-space-md font-semibold whitespace-nowrap">
-                Ahmad Fauzi
-                <span class="block font-label-sm text-label-sm text-outline font-normal">Armada Delivery C3</span>
-</td>
-<td class="py-space-md px-space-md whitespace-nowrap">
-<span class="px-space-sm py-1 rounded bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm font-semibold flex items-center gap-1 w-max">
-<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
-                  Peringatan Ganti No WA
-                </span>
-</td>
-<td class="py-space-md px-space-md max-w-xs truncate text-on-surface-variant" title="Sinkronisasi nomor WhatsApp darurat ke pusat hotline dispatcher 0811...">
-                Sinkronisasi nomor WhatsApp darurat ke pusat hotline dispatcher 0811...
-              </td>
-<td class="py-space-md px-space-md whitespace-nowrap">
-<span class="px-space-sm py-1 rounded bg-amber-950/60 text-amber-400 font-label-sm text-label-sm font-semibold flex items-center gap-1.5 w-max">
-<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                  Terkirim (Menunggu Respon)
-                </span>
-</td>
-<td class="py-space-md px-space-lg text-right whitespace-nowrap">
-<div class="flex items-center justify-end gap-space-xs">
-<button class="px-space-sm py-1 rounded bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-sm text-label-sm transition-colors">
-                    Kirim Ulang
-                  </button>
-<button class="px-space-sm py-1 rounded bg-surface-container hover:bg-surface-container-high text-primary font-label-sm text-label-sm transition-colors">
-                    Detail Respon
-                  </button>
-</div>
-</td>
-</tr>
-<!-- Row 4 -->
-<tr class="hover:bg-surface-container transition-colors">
-<td class="py-space-md px-space-lg font-code-tabular text-code-tabular text-on-surface whitespace-nowrap">
-                17/03/2026 19:02 WIB
-              </td>
-<td class="py-space-md px-space-md font-code-tabular text-code-tabular text-primary whitespace-nowrap">
-                359876543210987
-              </td>
-<td class="py-space-md px-space-md font-semibold whitespace-nowrap">
-                Rian Pratama
-                <span class="block font-label-sm text-label-sm text-outline font-normal">Patroli Malam Sektor 1</span>
-</td>
-<td class="py-space-md px-space-md whitespace-nowrap">
-<span class="px-space-sm py-1 rounded bg-error-container/30 text-tertiary font-label-sm text-label-sm font-bold flex items-center gap-1 w-max">
-<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
-                  Kunci Layar HP Hilang
-                </span>
-</td>
-<td class="py-space-md px-space-md max-w-xs truncate text-on-surface-variant" title="Darurat: HP Terdeteksi di luar rute checkpoint malam. Segera verifikasi.">
-                Darurat: HP Terdeteksi di luar rute checkpoint malam. Segera verifikasi.
-              </td>
-<td class="py-space-md px-space-md whitespace-nowrap">
-<span class="px-space-sm py-1 rounded bg-emerald-950 text-emerald-400 font-label-sm text-label-sm font-semibold flex items-center gap-1.5 w-max">
-<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  Terkirim &amp; Terbaca di Layar HP
-                </span>
-</td>
-<td class="py-space-md px-space-lg text-right whitespace-nowrap">
-<div class="flex items-center justify-end gap-space-xs">
-<button class="px-space-sm py-1 rounded bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-sm text-label-sm transition-colors">
-                    Kirim Ulang
-                  </button>
-<button class="px-space-sm py-1 rounded bg-surface-container hover:bg-surface-container-high text-primary font-label-sm text-label-sm transition-colors">
-                    Detail Respon
-                  </button>
-</div>
-</td>
+<tr id="transmission-empty-row">
+<td colspan="7" class="py-6 text-center text-xs text-outline">Belum ada riwayat perintah pada sesi ini.</td>
 </tr>
 </tbody>
 </table>
@@ -2183,7 +2037,7 @@
                   <span class="text-[10px] font-bold text-primary uppercase tracking-wider">Target Terkunci</span>
                   <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
                 </div>
-                <h1 id="ota-target-nama" class="font-bold text-sm text-on-surface truncate">Budi Santoso</h1>
+                <h1 id="ota-target-nama" class="font-bold text-sm text-on-surface truncate">Belum dipilih</h1>
               </div>
             </div>
             <button onclick="navigateToTab('master-devices')" class="px-2 py-1 rounded bg-surface-container-high text-primary hover:bg-surface-container-highest transition-colors flex items-center gap-1 shrink-0 text-xs font-semibold">
@@ -2195,19 +2049,19 @@
           <div class="bg-surface-container-low rounded-lg p-2.5 mb-2 flex items-center justify-between gap-2">
             <div class="flex items-center gap-2 min-w-0">
               <span class="material-symbols-outlined text-outline text-[16px]">fingerprint</span>
-              <span id="ota-target-imei" class="font-mono text-xs text-on-surface truncate tracking-wider font-semibold">3589 1234 5678 901</span>
+              <span id="ota-target-imei" class="font-mono text-xs text-on-surface truncate tracking-wider font-semibold">-</span>
             </div>
-            <span id="ota-target-model" class="text-xs text-on-surface-variant shrink-0">Samsung Galaxy A15</span>
+            <span id="ota-target-model" class="text-xs text-on-surface-variant shrink-0">-</span>
           </div>
 
           <div class="flex items-center justify-between text-on-surface-variant text-xs">
             <div class="flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span id="ota-target-status" class="text-emerald-400 font-semibold">Online (94%)</span>
+              <span id="ota-target-status" class="text-emerald-400 font-semibold">-</span>
               <span class="text-outline text-[10px]">•</span>
-              <span>4G LTE</span>
+              <span>Telemetri</span>
             </div>
-            <span id="ota-target-divisi" class="truncate max-w-[140px] text-right">Divisi Wilayah II</span>
+            <span id="ota-target-divisi" class="truncate max-w-[140px] text-right">-</span>
           </div>
         </div>
 
@@ -2230,7 +2084,7 @@
             <span class="material-symbols-outlined text-[18px]">screen_lock_portrait</span>
             <span class="truncate w-full text-center">Kiosk</span>
           </button>
-          <button onclick="bukaModalKirimPesan(AppState.selectedTargetImei, 'Budi Santoso')" class="py-2 px-1 rounded flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-on-surface text-xs">
+          <button onclick="bukaModalKirimPesan(AppState.selectedTargetImei)" class="py-2 px-1 rounded flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-on-surface text-xs">
             <span class="material-symbols-outlined text-[18px]">chat_bubble_outline</span>
             <span class="truncate w-full text-center">Pesan</span>
           </button>
@@ -2342,13 +2196,13 @@
             <span class="px-2 py-0.5 rounded bg-error-container/40 text-error text-[9px] uppercase font-bold tracking-wider">CRITICAL OVERRIDE</span>
           </div>
           <p class="text-xs text-on-surface-variant mb-3 leading-relaxed">
-            Tindakan ini akan mengabaikan mode senyap pada target <span class="font-semibold text-white">Samsung A15</span> dan memicu sirene volume penuh over-the-air.
+            Tindakan ini akan mengabaikan mode senyap pada perangkat target dan memicu sirene volume penuh over-the-air.
           </p>
 
           <div class="bg-surface-container-lowest rounded-lg p-2.5 mb-3 space-y-1 text-xs">
             <div class="flex justify-between items-center text-on-surface-variant">
               <span>Target Transmisi:</span>
-              <span id="summaryTargetText" class="font-mono text-primary font-semibold">358912345678901 (Budi S.)</span>
+              <span id="summaryTargetText" class="font-mono text-primary font-semibold">-</span>
             </div>
             <div class="flex justify-between items-center text-on-surface-variant">
               <span>Pola Audio / Vol:</span>
@@ -2389,20 +2243,20 @@
             <div class="flex flex-wrap items-center gap-2">
               <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-secondary/15 text-primary text-xs tracking-wider uppercase font-bold">
                 <span class="inline-flex h-2 w-2 rounded-full bg-primary animate-ping mr-1"></span>
-                SIGNAL RECOVERED • KONEKSI PERANGKAT PULIH KEMBALI
+                SIGNAL RECOVERY • PEMANTAUAN INSIDEN
               </span>
-              <span class="px-2.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-mono text-xs font-semibold">
-                INCIDENT #INC-202611-001
-              </span>
-              <span class="px-2.5 py-0.5 rounded bg-primary-container/20 text-sky-300 font-mono text-xs font-semibold">
-                STATUS: SINYAL_PULIH
+              <select id="recovery-device-select" onchange="pilihTargetRecovery(this.value)" class="bg-surface-container text-on-surface text-xs px-3 py-1.5 rounded-lg border border-surface-highest/60 focus:outline-none focus:border-primary cursor-pointer">
+                <option value="">Pilih perangkat...</option>
+              </select>
+              <span id="recovery-badge-status" class="px-2.5 py-0.5 rounded bg-primary-container/20 text-sky-300 font-mono text-xs font-semibold">
+                STATUS: -
               </span>
             </div>
             <div class="flex items-center gap-2">
               <span class="material-symbols-outlined text-[24px] text-primary">smartphone</span>
-              <h1 class="font-bold text-lg text-on-surface">Budi Santoso</h1>
-              <span class="text-xs text-on-surface-variant">
-                Samsung Galaxy A15 • IMEI: <span class="font-mono text-primary font-bold">3589 1234 5678 901</span> • Divisi Logistik Wilayah II
+              <h1 id="recovery-nama" class="font-bold text-lg text-on-surface">Pilih Perangkat</h1>
+              <span id="recovery-meta" class="text-xs text-on-surface-variant">
+                -
               </span>
             </div>
           </div>
@@ -2413,21 +2267,21 @@
               <span class="material-symbols-outlined text-primary text-[18px]">battery_charging_full</span>
               <div class="flex flex-col">
                 <span class="text-[9px] text-outline uppercase font-bold">Daya Baterai</span>
-                <span class="font-mono text-xs text-on-surface font-bold">14% (AC Adapter)</span>
+                <span id="recovery-battery" class="font-mono text-xs text-on-surface font-bold">-</span>
               </div>
             </div>
             <div class="flex items-center gap-2 px-3 py-1.5 bg-surface-container-high rounded">
               <span class="material-symbols-outlined text-secondary text-[18px]">signal_cellular_alt</span>
               <div class="flex flex-col">
-                <span class="text-[9px] text-outline uppercase font-bold">Jaringan 4G</span>
-                <span class="font-mono text-xs text-on-surface font-bold">Telkomsel -68 dBm</span>
+                <span class="text-[9px] text-outline uppercase font-bold">Status</span>
+                <span id="recovery-signal" class="font-mono text-xs text-on-surface font-bold">-</span>
               </div>
             </div>
             <div class="flex items-center gap-2 px-3 py-1.5 bg-surface-container-high rounded">
               <span class="material-symbols-outlined text-tertiary text-[18px]">speed</span>
               <div class="flex flex-col">
-                <span class="text-[9px] text-outline uppercase font-bold">Latensi Link</span>
-                <span class="font-mono text-xs text-primary font-bold">210 ms (GNSS Sync)</span>
+                <span class="text-[9px] text-outline uppercase font-bold">Update Terakhir</span>
+                <span id="recovery-lastseen" class="font-mono text-xs text-primary font-bold">-</span>
               </div>
             </div>
           </div>
@@ -2461,8 +2315,8 @@
                     <span class="font-bold text-xs text-white">WhatsApp Gateway API (Fonnte)</span>
                     <span class="px-1.5 py-0.2 rounded bg-primary/20 text-primary font-mono text-[10px] font-bold">TERKIRIM INSTAN (2.1s)</span>
                   </div>
-                  <p class="text-[11px] text-outline truncate max-w-md mt-0.5">
-                    Tujuan: Admin (+62 811-9988-7766) • "[ALERT LACAKHP] Sinyal IMEI 358912345678901 pulih di Jl. Raya Industri. Sirene otomatis dipicu."
+                  <p id="recovery-wa-preview" class="text-[11px] text-outline truncate max-w-md mt-0.5">
+                    -
                   </p>
                 </div>
               </div>
@@ -2483,8 +2337,8 @@
                     <span class="font-bold text-xs text-white">GmailApp Email Resmi Korporat</span>
                     <span class="px-1.5 py-0.2 rounded bg-secondary/20 text-secondary font-mono text-[10px] font-bold">TERKIRIM (3.4s)</span>
                   </div>
-                  <p class="text-[11px] text-outline truncate max-w-md mt-0.5">
-                    Subjek: [INC-202611-001] Sinyal Pulih - Samsung Galaxy A15 (Budi Santoso)
+                  <p id="recovery-email-preview" class="text-[11px] text-outline truncate max-w-md mt-0.5">
+                    -
                   </p>
                 </div>
               </div>
@@ -2502,7 +2356,7 @@
                 <span class="material-symbols-outlined text-primary text-[20px]">fmd_good</span>
                 <div>
                   <h2 class="font-bold text-xs text-on-surface">Peta Digital Interaktif (Live Recovery Geolocation)</h2>
-                  <span class="text-[10px] text-outline">Akurasi GPS ±8m • Elevasi: 24m • BTS Cell #JKT-S442</span>
+                  <span id="recovery-coords-sub" class="text-[10px] text-outline">Akurasi GPS -</span>
                 </div>
               </div>
               <span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-mono text-[10px] font-bold flex items-center gap-1">
@@ -2512,13 +2366,13 @@
             </div>
 
             <!-- Recovery Info Vector -->
-            <div class="bg-surface-container p-3 rounded-lg border border-surface-highest/40 flex items-center justify-between">
-              <div>
-                <div class="text-[10px] font-bold uppercase text-outline">Displacement Vector</div>
-                <div class="text-sm font-bold text-primary font-mono">+850 meter (Arah Timur Laut 42°)</div>
-                <p class="text-[11px] text-slate-400 mt-0.5">Pergerakan terdeteksi dari titik hilang Gudang Cikini ke koridor Jl. Raya Industri.</p>
+            <div class="bg-surface-container p-3 rounded-lg border border-surface-highest/40 flex items-center justify-between gap-2">
+              <div class="min-w-0">
+                <div class="text-[10px] font-bold uppercase text-outline">Koordinat Terakhir</div>
+                <div id="recovery-coords-title" class="text-sm font-bold text-primary font-mono">-</div>
+                <p id="recovery-coords-desc" class="text-[11px] text-slate-400 mt-0.5">-</p>
               </div>
-              <a href="https://maps.google.com/?q=-6.2118,106.8462" target="_blank" class="px-3 py-2 rounded-lg bg-primary text-on-primary font-bold text-xs flex items-center gap-1 shadow hover:opacity-90">
+              <a id="recovery-maps-link" href="#" target="_blank" class="px-3 py-2 rounded-lg bg-primary text-on-primary font-bold text-xs flex items-center gap-1 shadow hover:opacity-90 shrink-0">
                 <span class="material-symbols-outlined text-[16px]">open_in_new</span>
                 <span>Buka di Google Maps Live</span>
               </a>
@@ -2565,7 +2419,7 @@
                 <span class="material-symbols-outlined text-[18px]">volume_off</span>
                 <span>Hentikan Sirene Sekarang (Stop Siren Now)</span>
               </button>
-              <button onclick="bukaLayarKioskLock({ imei: '358912345678901', pesanRemote: 'Kunci Layar Kiosk Diaktifkan oleh Dispatcher' })" class="w-full py-2 px-3 rounded-lg bg-surface-container-high hover:bg-surface-bright text-primary font-semibold text-xs flex items-center justify-center gap-1">
+              <button id="recovery-btn-kiosk" onclick="bukaKioskTargetAktif()" class="w-full py-2 px-3 rounded-lg bg-surface-container-high hover:bg-surface-bright text-primary font-semibold text-xs flex items-center justify-center gap-1">
                 <span class="material-symbols-outlined text-[16px]">screen_lock_portrait</span>
                 <span>Kunci Layar Kiosk (Lockdown)</span>
               </button>
@@ -2665,6 +2519,20 @@
           </div>
         </div>
 
+        <!-- Admin Device Picker (Hanya tampil untuk Admin) -->
+        <div id="staff-admin-picker-wrap" class="bg-surface-container rounded-xl p-3 border border-surface-highest/50 flex flex-col gap-2">
+          <label for="staff-device-picker" class="text-[10px] font-bold uppercase tracking-wider text-primary">Pilih Perangkat Staf (Mode Admin)</label>
+          <div class="flex gap-2">
+            <select id="staff-device-picker" onchange="pilihPerangkatStaf(this.value)" class="flex-1 bg-surface-container-low text-on-surface text-xs px-2.5 py-2 rounded-lg border border-surface-highest/60 focus:outline-none focus:border-primary cursor-pointer">
+              <option value="">Pilih perangkat...</option>
+            </select>
+            <button type="button" onclick="kirimLinkPelacakan(AppState.currentStaffImei)" class="px-2.5 py-2 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 text-xs font-semibold flex items-center gap-1" title="Kirim Link Pelacakan via WA">
+              <span class="material-symbols-outlined text-[15px]">share_location</span>
+              <span>Link</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Duty Toggle -->
         <div class="bg-surface-container rounded-xl p-4 border border-surface-highest/50 flex flex-col gap-3 shadow-md">
           <div class="flex items-center justify-between">
@@ -2697,7 +2565,7 @@
           <div class="bg-surface-container-low rounded-lg p-2.5 flex items-center justify-between">
             <div class="flex flex-col min-w-0">
               <span class="text-[9px] text-slate-400 uppercase tracking-wider font-semibold">Nomor IMEI Terdaftar</span>
-              <span id="staff-imei-display" class="font-mono text-sm text-sky-200 font-bold truncate">358912345678901</span>
+              <span id="staff-imei-display" class="font-mono text-sm text-sky-200 font-bold truncate">-</span>
             </div>
             <button onclick="salinTeks(document.getElementById('staff-imei-display').textContent, 'Nomor IMEI')" class="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-surface-bright text-slate-300 flex items-center justify-center transition" title="Salin IMEI">
               <span class="material-symbols-outlined text-[16px]">content_copy</span>
@@ -2707,19 +2575,19 @@
           <div class="flex flex-col gap-1.5 text-xs">
             <div class="flex items-center justify-between py-1 px-2 rounded bg-surface-container-low/50">
               <span class="text-slate-400 text-[11px]">Staf Penanggung Jawab</span>
-              <span id="staff-nama-display" class="font-semibold text-slate-200">Budi Santoso</span>
+              <span id="staff-nama-display" class="font-semibold text-slate-200">Belum dipilih</span>
             </div>
             <div class="flex items-center justify-between py-1 px-2 rounded bg-surface-container-low/50">
               <span class="text-slate-400 text-[11px]">Divisi Wilayah</span>
-              <span id="staff-divisi-display" class="font-semibold text-slate-200">Lapangan - Wilayah II</span>
+              <span id="staff-divisi-display" class="font-semibold text-slate-200">-</span>
             </div>
             <div class="flex items-center justify-between py-1 px-2 rounded bg-surface-container-low/50">
               <span class="text-slate-400 text-[11px]">Model Perangkat</span>
-              <span id="staff-model-display" class="font-semibold text-slate-200">Samsung Galaxy A15</span>
+              <span id="staff-model-display" class="font-semibold text-slate-200">-</span>
             </div>
             <div class="flex items-center justify-between py-1 px-2 rounded bg-surface-container-low/50">
               <span class="text-slate-400 text-[11px]">Kontak Terdaftar</span>
-              <span id="staff-wa-display" class="font-mono font-semibold text-emerald-400">+62 811-9988-7766</span>
+              <span id="staff-wa-display" class="font-mono font-semibold text-emerald-400">-</span>
             </div>
           </div>
 
@@ -2737,8 +2605,8 @@
               <span class="material-symbols-outlined text-emerald-400 text-[18px]">battery_std</span>
             </div>
             <div class="my-2">
-              <div id="staff-battery-display" class="text-xl font-bold font-mono text-white">88%</div>
-              <div class="text-[10px] text-emerald-400 font-semibold">Baterai Normal</div>
+              <div id="staff-battery-display" class="text-xl font-bold font-mono text-white">0%</div>
+              <div class="text-[10px] text-emerald-400 font-semibold">Status Daya</div>
             </div>
             <div class="w-full bg-surface-container-highest rounded-full h-1.5 overflow-hidden">
               <div class="bg-emerald-400 h-full w-[88%]"></div>
@@ -2751,7 +2619,7 @@
               <span class="material-symbols-outlined text-sky-400 text-[18px]">my_location</span>
             </div>
             <div class="my-2">
-              <div id="staff-acc-display" class="text-xl font-bold font-mono text-white">±4 Meter</div>
+              <div id="staff-acc-display" class="text-xl font-bold font-mono text-white">-</div>
               <div class="text-[10px] text-sky-400 font-semibold">Presisi Tinggi (HDOP)</div>
             </div>
             <div class="w-full bg-surface-container-highest rounded-full h-1.5 overflow-hidden">
@@ -2817,7 +2685,7 @@
           </div>
           <div class="relative flex items-center">
             <span class="material-symbols-outlined absolute left-3 text-outline text-[18px] pointer-events-none">barcode_scanner</span>
-            <input id="modal-input-imei" type="text" placeholder="3589 1234 5678 901" value="3589 7721 8890 312" class="w-full bg-surface-container text-on-surface placeholder:text-outline font-mono text-xs rounded-xl pl-10 pr-20 py-2.5 border border-surface-container-high focus:outline-none focus:border-primary"/>
+            <input id="modal-input-imei" type="text" placeholder="Masukkan 15 digit nomor IMEI" class="w-full bg-surface-container text-on-surface placeholder:text-outline font-mono text-xs rounded-xl pl-10 pr-20 py-2.5 border border-surface-container-high focus:outline-none focus:border-primary"/>
             <button onclick="showToast('Format TAC 15-digit terverifikasi valid', 'success')" class="absolute right-2 px-2 py-1 rounded-lg bg-surface-container-high hover:bg-surface-bright text-primary text-[10px] font-bold transition-colors flex items-center gap-1">
               <span class="material-symbols-outlined text-[12px]">check</span> Validasi
             </button>
@@ -2829,7 +2697,7 @@
           <label class="text-[11px] font-semibold text-on-surface-variant uppercase">Nama Lengkap Staf Penanggung Jawab</label>
           <div class="relative flex items-center">
             <span class="material-symbols-outlined absolute left-3 text-outline text-[18px] pointer-events-none">person</span>
-            <input id="modal-input-nama" type="text" placeholder="Contoh: Budi Santoso / Siti Rahmawati" value="Ahmad Fauzi" class="w-full bg-surface-container text-on-surface placeholder:text-outline text-xs rounded-xl pl-10 pr-3 py-2.5 border border-surface-container-high focus:outline-none focus:border-primary"/>
+            <input id="modal-input-nama" type="text" placeholder="Nama lengkap pemegang HP" class="w-full bg-surface-container text-on-surface placeholder:text-outline text-xs rounded-xl pl-10 pr-3 py-2.5 border border-surface-container-high focus:outline-none focus:border-primary"/>
           </div>
         </div>
 
@@ -2844,7 +2712,7 @@
               <span class="material-symbols-outlined text-[18px] text-emerald-400">chat</span>
               <span class="font-mono text-xs font-semibold pl-1 border-r border-surface-container-high pr-1.5">+62</span>
             </div>
-            <input id="modal-input-wa" type="tel" placeholder="812-3456-7890" value="81398214470" class="w-full bg-surface-container text-on-surface placeholder:text-outline font-mono text-xs rounded-xl pl-20 pr-3 py-2.5 border border-surface-container-high focus:outline-none focus:border-primary"/>
+            <input id="modal-input-wa" type="tel" placeholder="812-3456-7890" class="w-full bg-surface-container text-on-surface placeholder:text-outline font-mono text-xs rounded-xl pl-20 pr-3 py-2.5 border border-surface-container-high focus:outline-none focus:border-primary"/>
           </div>
         </div>
 
@@ -2861,7 +2729,7 @@
           </div>
           <div class="flex flex-col gap-1">
             <label class="text-[11px] font-semibold text-on-surface-variant uppercase">Tipe &amp; Seri HP</label>
-            <input id="modal-input-tipe" type="text" placeholder="Contoh: Galaxy A15" value="Xiaomi Redmi 13C" class="w-full bg-surface-container text-on-surface placeholder:text-outline text-xs rounded-xl px-3 py-2.5 border border-surface-container-high focus:outline-none focus:border-primary"/>
+            <input id="modal-input-tipe" type="text" placeholder="Contoh: Samsung Galaxy A15" class="w-full bg-surface-container text-on-surface placeholder:text-outline text-xs rounded-xl px-3 py-2.5 border border-surface-container-high focus:outline-none focus:border-primary"/>
           </div>
         </div>
 
@@ -3201,6 +3069,16 @@
         </button>
       </div>
 
+      <div class="p-3 rounded-xl bg-surface-container-low border border-surface-highest/60 flex items-center justify-between gap-2 text-xs">
+        <div>
+          <div class="text-[10px] uppercase text-outline font-semibold">Akun &amp; Sesi Aktif</div>
+          <div id="settings-user-info" class="font-bold text-white mt-0.5">Belum login</div>
+        </div>
+        <button type="button" onclick="tutupModalSettings(); logoutUser();" class="px-3 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-semibold text-xs">
+          Ganti Akun / Logout
+        </button>
+      </div>
+
       <div class="flex flex-col gap-2 text-xs">
         <label class="text-slate-400">Web App Exec URL (Google Apps Script):</label>
         <input id="input-gas-url" type="url" placeholder="https://script.google.com/macros/s/AKfycb.../exec" class="w-full p-2.5 rounded-lg bg-surface-container-low border border-surface-highest text-white font-mono focus:outline-none focus:border-primary"/>
@@ -3305,18 +3183,18 @@
             </div>
             <div class="flex items-center rounded-xl bg-surface-container-low border border-surface-highest overflow-hidden focus-within:border-primary">
               <span class="material-symbols-outlined text-slate-400 px-3 text-[18px]">person</span>
-              <input id="login-username" required type="text" placeholder="admin atau nomor IMEI staf" value="admin" class="flex-1 py-2.5 bg-transparent text-white focus:outline-none"/>
+              <input id="login-username" required type="text" placeholder="admin atau 15 digit IMEI staf" class="flex-1 py-2.5 bg-transparent text-white focus:outline-none"/>
             </div>
           </div>
 
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="text-slate-400 font-semibold">Password</label>
+              <label class="text-slate-400 font-semibold">Password (Admin)</label>
               <span class="text-[10px] text-outline font-mono">ENCRYPTED</span>
             </div>
             <div class="flex items-center rounded-xl bg-surface-container-low border border-surface-highest overflow-hidden focus-within:border-primary">
               <span class="material-symbols-outlined text-slate-400 px-3 text-[18px]">key</span>
-              <input id="login-password" required type="password" placeholder="••••••••" value="admin123" class="flex-1 py-2.5 bg-transparent text-white focus:outline-none"/>
+              <input id="login-password" type="password" placeholder="Password admin (kosongkan jika login IMEI staf)" class="flex-1 py-2.5 bg-transparent text-white focus:outline-none"/>
             </div>
           </div>
 
@@ -3326,20 +3204,9 @@
           </button>
         </form>
 
-        <div class="mt-6 pt-4 border-t border-surface-highest/60 flex flex-col gap-2">
-          <div class="text-[11px] text-slate-400 text-center">Akun Demo Siap Pakai:</div>
-          <div class="grid grid-cols-2 gap-2">
-            <button onclick="quickFillLogin('admin')" class="py-2 px-2.5 rounded-lg bg-surface-container-high hover:bg-surface-bright text-xs text-slate-200 font-medium transition text-center">
-              👤 Login Admin
-            </button>
-            <button onclick="quickFillLogin('staff')" class="py-2 px-2.5 rounded-lg bg-surface-container-high hover:bg-surface-bright text-xs text-sky-300 font-medium transition text-center">
-              📱 Login Staf Budi
-            </button>
-          </div>
-          <button onclick="tutupHalamanLogin(); navigateToTab('live-tracking');" class="mt-2 py-2 px-3 rounded-lg border border-surface-highest/60 hover:bg-surface-container-high text-[11px] text-slate-400 hover:text-white transition text-center flex items-center justify-center gap-1.5" type="button">
-            <span class="material-symbols-outlined text-[15px] text-primary">map</span>
-            <span>Eksplorasi Peta Google Maps Langsung</span>
-          </button>
+        <div class="mt-5 pt-4 border-t border-surface-highest/60 text-[11px] text-slate-400 leading-relaxed space-y-1">
+          <div>• <strong class="text-white">Admin:</strong> masukkan username &amp; password (default sheet Config: <code class="text-primary">admin</code> / <code class="text-primary">admin123</code>).</div>
+          <div>• <strong class="text-white">HP Staf:</strong> masukkan <strong class="text-sky-300">15 digit IMEI</strong> yang terdaftar (tanpa password) atau buka link <code class="text-primary">?imei=...</code> dari Admin.</div>
         </div>
       </div>
 
@@ -3379,8 +3246,8 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm pt-space-xs">
 <div class="flex flex-col bg-surface-container-low px-space-md py-space-sm rounded">
 <span class="font-label-sm text-label-sm text-outline">Target IMEI &amp; Pemilik</span>
-<span class="font-code-tabular text-code-tabular text-on-surface font-semibold mt-0.5">358912345678901</span>
-<span class="font-body-sm text-body-sm text-on-surface-variant">Budi Santoso (Samsung A15)</span>
+<span id="siren-modal-imei" class="font-code-tabular text-code-tabular text-on-surface font-semibold mt-0.5">-</span>
+<span id="siren-modal-owner" class="font-body-sm text-body-sm text-on-surface-variant">-</span>
 </div>
 <div class="flex flex-col bg-surface-container-low px-space-md py-space-sm rounded">
 <span class="font-label-sm text-label-sm text-outline">Jenis Nada Terpilih</span>
@@ -3454,7 +3321,7 @@
 </div>
 <div class="flex items-center gap-space-xs text-outline font-label-sm text-label-sm">
 <span class="material-symbols-outlined text-[16px] text-tertiary">lock</span>
-<span>Sesi terenkripsi TLS 1.3 • Menghubungi IMEI 358912345678901</span>
+<span>Sesi terenkripsi TLS 1.3 • Menghubungi IMEI <span id="siren-modal-tls-imei">-</span></span>
 </div>
 </div>
 </div>
@@ -3484,7 +3351,7 @@
 </div>
 <h3 class="font-headline-sm text-headline-sm text-on-surface font-bold" id="success-main-title">Sirene Berdering di HP Staf (Volume 100%)</h3>
 <p class="font-body-md text-body-md text-on-surface-variant max-w-lg mt-1" id="success-main-desc">
-            Modul audio HP dinas <span class="text-on-surface font-semibold">Budi Santoso (IMEI 358912345678901)</span> berhasil dipaksa aktif dengan nada <span class="text-primary font-semibold" id="success-tone-name">Ambulans Taktis</span> dan getaran taktis berkelanjutan.
+            Modul audio HP dinas <span id="siren-modal-success-target" class="text-on-surface font-semibold">-</span> berhasil dipaksa aktif dengan nada <span class="text-primary font-semibold" id="success-tone-name">Ambulans Taktis</span> dan getaran taktis berkelanjutan.
           </p>
 <div class="mt-4 flex flex-wrap items-center justify-center gap-space-xs font-label-sm text-label-sm">
 <span class="px-space-sm py-1 rounded bg-surface-container-high text-on-surface border border-outline-variant/30 flex items-center gap-1">

@@ -27,7 +27,7 @@ const AppState = {
   dutyActive: localStorage.getItem('lacakhp_duty_active') === 'true',
   
   // Remote Command OTA State
-  selectedTargetImei: '358912345678901',
+  selectedTargetImei: '',
   activeAudioPattern: 'ambulance', // 'ambulance' | 'horn' | 'morse'
   activePatternName: 'Ambulans Taktis',
   configuredDuration: 60,
@@ -311,6 +311,10 @@ function handleMockApi(action, payload) {
         });
       } else if (action === 'sendRemoteMsg') {
         resolve({ success: true, message: 'Pesan remote dijadwalkan!' });
+      } else if (action === 'deleteDevice') {
+        MOCK_DATA.devices = MOCK_DATA.devices.filter(x => x.imei !== payload.imei);
+        MOCK_DATA.kpi.total = MOCK_DATA.devices.length;
+        resolve({ success: true, message: 'Perangkat IMEI ' + payload.imei + ' dihapus.' });
       } else {
         resolve({ success: true });
       }
@@ -395,6 +399,10 @@ function stopEmergencySiren() {
   AppState.isSirenActive = false;
 }
 
+function stopSirenPattern() {
+  stopEmergencySiren();
+}
+
 // Uji coba suara cepat 700ms saat klik icon preview
 function previewAudioPattern(patternType) {
   try {
@@ -469,6 +477,15 @@ function navigateToTab(tabId) {
   if (tabId === 'remote-command') {
     renderRemoteCommandUI();
   }
+
+  // Khusus tab Signal Recovery
+  if (tabId === 'signal-recovery') {
+    renderSignalRecoveryUI();
+  }
+}
+
+function getSelectedDevice() {
+  return AppState.devices.find(d => d.imei === AppState.selectedTargetImei) || AppState.devices[0] || null;
 }
 
 // ============================================================================
@@ -704,6 +721,13 @@ async function loadDashboardData() {
     AppState.kpi = res.kpi || AppState.kpi;
     AppState.alerts = res.recentAlerts || res.alerts || [];
 
+    if (!AppState.selectedTargetImei || !AppState.devices.some(d => d.imei === AppState.selectedTargetImei)) {
+      AppState.selectedTargetImei = AppState.devices[0]?.imei || '';
+    }
+    if (AppState.user?.role !== 'STAFF' && (!AppState.currentStaffImei || !AppState.devices.some(d => d.imei === AppState.currentStaffImei))) {
+      AppState.currentStaffImei = AppState.selectedTargetImei;
+    }
+
     renderKPIStats();
     renderLiveTelemetryTable();
     renderAlertsPanel();
@@ -711,6 +735,9 @@ async function loadDashboardData() {
     renderMasterDeviceTable();
     renderDeviceMarkers();
     populateRouteHistorySelect();
+    renderRemoteCommandUI();
+    renderSignalRecoveryUI();
+    renderStaffClientUI();
   }
 }
 
@@ -783,9 +810,12 @@ function renderLiveTelemetryTable() {
             <span class="text-xs font-mono">${device.baterai}%</span>
           </div>
         </td>
-        <td class="p-3 text-right">
+        <td class="p-3 text-right whitespace-nowrap">
           <button onclick="bukaRemoteCommandTarget('${device.imei}')" class="px-2.5 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-medium mr-1 transition">
             Sirene OTA
+          </button>
+          <button onclick="kirimLinkPelacakan('${device.imei}')" class="px-2.5 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 text-xs font-medium mr-1 transition" title="Kirim Link Pelacakan via WhatsApp">
+            Link GPS
           </button>
           <button onclick="fokusRutePerangkat('${device.imei}')" class="px-2.5 py-1 rounded bg-surface-container-high hover:bg-surface-bright text-primary text-xs font-medium transition">
             Lihat Jejak
@@ -942,14 +972,14 @@ function renderMasterDeviceCards() {
         </div>
 
         <!-- Tactical Actions Buttons -->
-        <div class="grid grid-cols-4 gap-space-xs pt-1 ml-1">
+        <div class="grid grid-cols-5 gap-space-xs pt-1 ml-1">
           <button onclick="bukaRemoteCommandTarget('${d.imei}')" class="py-2 px-1 rounded-lg ${isHilang ? 'bg-error-container hover:bg-tertiary-container text-on-error-container' : 'bg-surface-container-high hover:bg-surface-container-highest text-rose-300'} font-label-md text-label-md flex items-center justify-center gap-1 shadow-sm transition-transform active:scale-95">
             <span class="material-symbols-outlined text-[16px]">volume_up</span>
-            <span>${isHilang ? 'Sirene OTA' : 'Pusat OTA'}</span>
+            <span>${isHilang ? 'Sirene' : 'OTA'}</span>
           </button>
           <button onclick="fokusRutePerangkat('${d.imei}')" class="py-2 px-1 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-primary-container font-label-md text-label-md flex items-center justify-center gap-1 transition-colors active:scale-95">
             <span class="material-symbols-outlined text-[16px]">route</span>
-            <span>Rute GPS</span>
+            <span>Peta</span>
           </button>
           <button onclick="kirimLinkPelacakan('${d.imei}')" class="py-2 px-1 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-sky-300 font-label-md text-label-md flex items-center justify-center gap-1 transition-colors active:scale-95">
             <span class="material-symbols-outlined text-[16px]">share_location</span>
@@ -957,8 +987,12 @@ function renderMasterDeviceCards() {
           </button>
           <a href="https://wa.me/${cleanWaNumber(d.noWa)}" target="_blank" class="py-2 px-1 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-secondary font-label-md text-label-md flex items-center justify-center gap-1 transition-colors active:scale-95 text-center">
             <span class="material-symbols-outlined text-[16px]">send</span>
-            <span>Chat WA</span>
+            <span>WA</span>
           </a>
+          <button onclick="hapusPerangkatById('${d.imei}')" class="py-2 px-1 rounded-lg bg-surface-container-high hover:bg-rose-600/30 text-rose-400 font-label-md text-label-md flex items-center justify-center gap-1 transition-colors active:scale-95" title="Hapus Perangkat">
+            <span class="material-symbols-outlined text-[16px]">delete</span>
+            <span>Hapus</span>
+          </button>
         </div>
       </div>
     `;
@@ -974,23 +1008,183 @@ function bukaRemoteCommandTarget(imei) {
   renderRemoteCommandUI();
 }
 
+function pilihTargetOTA(imei) {
+  AppState.selectedTargetImei = imei;
+  renderRemoteCommandUI();
+}
+
 function renderRemoteCommandUI() {
-  const target = AppState.devices.find(d => d.imei === AppState.selectedTargetImei) || AppState.devices[0];
+  const sel = document.getElementById('desktop-ota-target-select');
+  if (sel) {
+    sel.innerHTML = AppState.devices.length
+      ? AppState.devices.map(d => `<option value="${escapeHtml(d.imei)}">${escapeHtml(d.imei)} — ${escapeHtml(d.nama)} (${escapeHtml(d.tipe)})</option>`).join('')
+      : '<option value="">Belum ada perangkat</option>';
+  }
+
+  const target = getSelectedDevice();
+  const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+  if (!target) {
+    setText('ota-target-nama', 'Belum ada perangkat');
+    setText('ota-target-imei', '-');
+    setText('ota-target-model', '-');
+    setText('ota-target-status', '-');
+    setText('ota-target-divisi', '-');
+    setText('summaryTargetText', '-');
+    setText('form-target-imei', 'IMEI -');
+    setText('form-target-name', 'Belum dipilih');
+    setText('form-target-meta', '(-)');
+    setText('form-target-status', '-');
+    setText('inspector-coords', '-');
+    setText('inspector-radius', 'Radius: -');
+    setText('inspector-battery', '-');
+    setText('inspector-network', '-');
+    setText('inspector-wa', '-');
+    setText('inspector-lastseen', '-');
+    setText('siren-modal-imei', '-');
+    setText('siren-modal-owner', '-');
+    setText('siren-modal-tls-imei', '-');
+    setText('siren-modal-success-target', '-');
+    return;
+  }
+
+  AppState.selectedTargetImei = target.imei;
+  if (sel) sel.value = target.imei;
+
+  // Mobile OTA view
+  setText('ota-target-nama', target.nama);
+  setText('ota-target-imei', target.imei);
+  setText('ota-target-model', target.tipe);
+  setText('ota-target-status', `${target.status} (${target.baterai}%)`);
+  setText('ota-target-divisi', target.divisi);
+  setText('summaryTargetText', `${target.imei} (${target.nama})`);
+
+  // Desktop OTA view & Side Inspector
+  setText('form-target-imei', `IMEI ${target.imei}`);
+  setText('form-target-name', target.nama);
+  setText('form-target-meta', `(${target.divisi} - ${target.tipe})`);
+  setText('form-target-status', `${target.status} ${target.baterai}%`);
+  const dot = document.getElementById('form-target-status-dot');
+  if (dot) {
+    dot.className = `w-2 h-2 rounded-full ${target.status === 'Hilang' ? 'bg-rose-500 animate-ping' : (target.status === 'Online' ? 'bg-emerald-400' : 'bg-amber-400')}`;
+  }
+  const hasGps = Boolean(target.lat && target.lng);
+  setText('inspector-coords', hasGps ? `${Number(target.lat).toFixed(5)}, ${Number(target.lng).toFixed(5)}` : 'Belum ada sinyal GPS');
+  setText('inspector-radius', hasGps ? `Radius: ±${target.akurasi || 0}m` : 'Radius: -');
+  setText('inspector-battery', `${target.baterai}%`);
+  setText('inspector-network', `${target.status} (${target.lastSeenRelative || '-'})`);
+  setText('inspector-wa', target.noWa ? `+62 ${cleanWaNumber(target.noWa).replace(/^62/, '')}` : '-');
+  setText('inspector-lastseen', target.lastSeenFormatted || target.lastSeenRelative || '-');
+
+  // Modal Sirene
+  setText('siren-modal-imei', target.imei);
+  setText('siren-modal-owner', `${target.nama} (${target.tipe})`);
+  setText('siren-modal-tls-imei', target.imei);
+  setText('siren-modal-success-target', `${target.nama} (IMEI ${target.imei})`);
+}
+
+async function tandaiTargetHilang() {
+  const target = getSelectedDevice();
+  if (!target) {
+    showToast('Pilih perangkat target terlebih dahulu.', 'warning');
+    return;
+  }
+  const catatan = document.getElementById('screen-message')?.value.trim() || 'Perangkat dilaporkan hilang oleh Admin.';
+  const res = await callApi('markLost', { imei: target.imei, catatan });
+  if (res.success) {
+    showToast(res.message || `Status ${target.nama} ditandai HILANG.`, 'success');
+    await loadDashboardData();
+  } else {
+    showToast(res.message || 'Gagal menandai perangkat hilang.', 'error');
+  }
+}
+
+function bukaModalKirimPesan(imei) {
+  const target = AppState.devices.find(d => d.imei === imei) || getSelectedDevice();
   if (!target) return;
+  const pesan = prompt(`Kirim pesan layar ke ${target.nama} (${target.imei}):`, 'Harap segera hubungi kantor pusat.');
+  if (!pesan) return;
+  callApi('sendRemoteMsg', { imei: target.imei, pesan, tipePesan: 'Pesan_Biasa' }).then(res => {
+    showToast(res.message || 'Pesan dikirim ke perangkat target.', res.success ? 'success' : 'error');
+  });
+}
 
-  const elNama = document.getElementById('ota-target-nama');
-  const elImei = document.getElementById('ota-target-imei');
-  const elModel = document.getElementById('ota-target-model');
-  const elStatus = document.getElementById('ota-target-status');
-  const elDivisi = document.getElementById('ota-target-divisi');
-  const elSummaryTarget = document.getElementById('summaryTargetText');
+function pilihTargetRecovery(imei) {
+  AppState.selectedTargetImei = imei;
+  renderSignalRecoveryUI();
+}
 
-  if (elNama) elNama.textContent = target.nama;
-  if (elImei) elImei.textContent = target.imei;
-  if (elModel) elModel.textContent = target.tipe;
-  if (elStatus) elStatus.textContent = `${target.status} (${target.baterai}%)`;
-  if (elDivisi) elDivisi.textContent = target.divisi;
-  if (elSummaryTarget) elSummaryTarget.textContent = `${target.imei} (${target.nama})`;
+function renderSignalRecoveryUI() {
+  const sel = document.getElementById('recovery-device-select');
+  if (sel) {
+    sel.innerHTML = AppState.devices.length
+      ? AppState.devices.map(d => `<option value="${escapeHtml(d.imei)}">${escapeHtml(d.nama)} (${escapeHtml(d.imei)}) - ${escapeHtml(d.status)}</option>`).join('')
+      : '<option value="">Belum ada perangkat</option>';
+  }
+
+  const target = AppState.devices.find(d => d.imei === AppState.selectedTargetImei)
+    || AppState.devices.find(d => d.status === 'Hilang')
+    || AppState.devices[0]
+    || null;
+
+  const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const mapsLink = document.getElementById('recovery-maps-link');
+
+  if (!target) {
+    setText('recovery-badge-status', 'STATUS: -');
+    setText('recovery-nama', 'Belum ada perangkat');
+    setText('recovery-meta', '-');
+    setText('recovery-battery', '-');
+    setText('recovery-signal', '-');
+    setText('recovery-lastseen', '-');
+    setText('recovery-wa-preview', '-');
+    setText('recovery-email-preview', '-');
+    setText('recovery-coords-sub', 'Belum ada data GPS');
+    setText('recovery-coords-title', '-');
+    setText('recovery-coords-desc', 'Tambahkan perangkat di Master Perangkat.');
+    if (mapsLink) mapsLink.href = '#';
+    return;
+  }
+
+  if (sel) sel.value = target.imei;
+  const hasGps = Boolean(target.lat && target.lng);
+  setText('recovery-badge-status', `STATUS: ${String(target.status || '-').toUpperCase()}`);
+  setText('recovery-nama', target.nama);
+  setText('recovery-meta', `${target.tipe} • IMEI: ${target.imei} • ${target.divisi}`);
+  setText('recovery-battery', `${target.baterai}%`);
+  setText('recovery-signal', target.status);
+  setText('recovery-lastseen', target.lastSeenFormatted || target.lastSeenRelative || '-');
+  setText('recovery-wa-preview', `Target: ${target.nama} (IMEI ${target.imei}) • WA ${target.noWa || '-'}`);
+  setText('recovery-email-preview', `Subjek: Monitor Perangkat - ${target.tipe} (${target.nama} / ${target.imei})`);
+  setText('recovery-coords-sub', hasGps ? `Akurasi GPS ±${target.akurasi || 0}m • Update ${target.lastSeenRelative || '-'}` : 'Menunggu sinyal GPS pertama dari HP');
+  setText('recovery-coords-title', hasGps ? `${Number(target.lat).toFixed(6)}, ${Number(target.lng).toFixed(6)}` : 'Koordinat belum tersedia (0, 0)');
+  setText('recovery-coords-desc', hasGps ? `Posisi terakhir tercatat dari ${target.nama} (${target.imei}).` : `Kirim Link Pelacakan ke HP ${target.nama} agar mengirim koordinat.`);
+
+  if (mapsLink) {
+    if (hasGps) {
+      mapsLink.href = `https://maps.google.com/?q=${target.lat},${target.lng}`;
+      mapsLink.classList.remove('opacity-50', 'pointer-events-none');
+    } else {
+      mapsLink.href = '#';
+      mapsLink.classList.add('opacity-50', 'pointer-events-none');
+    }
+  }
+}
+
+function bukaKioskTargetAktif() {
+  const target = getSelectedDevice();
+  if (!target) {
+    showToast('Belum ada perangkat target.', 'warning');
+    return;
+  }
+  bukaLayarKioskLock({
+    imei: target.imei,
+    nama: target.nama,
+    lat: target.lat || 0,
+    lng: target.lng || 0,
+    alamat: target.lokasiDeskripsi || `IMEI ${target.imei}`,
+    pesanRemote: 'Kunci Layar Kiosk Diaktifkan oleh Dispatcher'
+  });
 }
 
 // Eksekusi Sirene OTA dengan Modal Interaktif
@@ -1098,7 +1292,12 @@ async function submitRegistrasiPerangkat(e) {
 
   const res = await callApi('saveDevice', payload);
   if (res.success) {
+    AppState.selectedTargetImei = payload.imei;
     showToast(res.message, 'success');
+    ['modal-input-imei', 'modal-input-nama', 'modal-input-wa', 'modal-input-tipe'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
     tutupModalRegistrasiPerangkat();
     await loadDashboardData();
   } else {
@@ -1125,10 +1324,35 @@ function simulasiScanBarcode() {
 // ============================================================================
 // 10. LAYAR KLIEN STAF (MOBILE AGENT PWA)
 // ============================================================================
-function renderStaffClientUI() {
-  const staff = AppState.devices.find(d => d.imei === AppState.currentStaffImei);
-  if (!staff) return;
+function pilihPerangkatStaf(imei) {
+  if (AppState.dutyActive) {
+    stopStaffTracking();
+    AppState.dutyActive = false;
+    localStorage.setItem('lacakhp_duty_active', 'false');
+  }
+  AppState.currentStaffImei = imei;
+  localStorage.setItem('lacakhp_staff_imei', imei);
+  renderStaffClientUI();
+}
 
+function renderStaffClientUI() {
+  const isStaffRole = AppState.user && AppState.user.role === 'STAFF';
+  const pickerWrap = document.getElementById('staff-admin-picker-wrap');
+  const picker = document.getElementById('staff-device-picker');
+  if (pickerWrap) pickerWrap.style.display = isStaffRole ? 'none' : '';
+  if (picker && !isStaffRole) {
+    picker.innerHTML = AppState.devices.length
+      ? AppState.devices.map(d => `<option value="${escapeHtml(d.imei)}">${escapeHtml(d.nama)} (${escapeHtml(d.imei)})</option>`).join('')
+      : '<option value="">Belum ada perangkat</option>';
+    if (AppState.currentStaffImei && AppState.devices.some(d => d.imei === AppState.currentStaffImei)) {
+      picker.value = AppState.currentStaffImei;
+    } else if (AppState.devices[0]) {
+      AppState.currentStaffImei = AppState.devices[0].imei;
+      picker.value = AppState.currentStaffImei;
+    }
+  }
+
+  const staff = AppState.devices.find(d => d.imei === AppState.currentStaffImei);
   const elImei = document.getElementById('staff-imei-display');
   const elNama = document.getElementById('staff-nama-display');
   const elDivisi = document.getElementById('staff-divisi-display');
@@ -1139,13 +1363,24 @@ function renderStaffClientUI() {
   const elDutyBadge = document.getElementById('staff-duty-badge');
   const elDutyBtn = document.getElementById('staff-toggle-duty-btn');
 
+  if (!staff) {
+    if (elImei) elImei.textContent = '-';
+    if (elNama) elNama.textContent = 'Belum dipilih';
+    if (elDivisi) elDivisi.textContent = '-';
+    if (elModel) elModel.textContent = '-';
+    if (elWa) elWa.textContent = '-';
+    if (elBat) elBat.textContent = '0%';
+    if (elAcc) elAcc.textContent = '-';
+    return;
+  }
+
   if (elImei) elImei.textContent = staff.imei;
   if (elNama) elNama.textContent = staff.nama;
   if (elDivisi) elDivisi.textContent = staff.divisi;
   if (elModel) elModel.textContent = staff.tipe;
-  if (elWa) elWa.textContent = staff.noWa ? `+62 ${cleanWaNumber(staff.noWa).replace(/^62/, '')}` : '+62 811-9988-7766';
-  if (elBat) elBat.textContent = staff.baterai + '%';
-  if (elAcc) elAcc.textContent = '±' + (staff.akurasi || 4) + ' Meter';
+  if (elWa) elWa.textContent = staff.noWa ? `+62 ${cleanWaNumber(staff.noWa).replace(/^62/, '')}` : '-';
+  if (elBat) elBat.textContent = (staff.baterai || 0) + '%';
+  if (elAcc) elAcc.textContent = staff.akurasi ? ('±' + staff.akurasi + ' Meter') : '-';
 
   if (elDutyBadge) {
     elDutyBadge.textContent = AppState.dutyActive ? 'Tugas Aktif (Transmisi)' : 'Siaga Lapangan';
@@ -1331,7 +1566,13 @@ async function simpanNomorWABaru() {
 function bukaModalSettings() {
   const modal = document.getElementById('modal-settings');
   const input = document.getElementById('input-gas-url');
+  const userInfo = document.getElementById('settings-user-info');
   if (input) input.value = AppState.gasUrl;
+  if (userInfo) {
+    userInfo.textContent = AppState.user
+      ? `${AppState.user.name || AppState.user.imei} (${AppState.user.role})`
+      : 'Belum login';
+  }
   if (modal) modal.style.display = 'flex';
 }
 
@@ -1398,6 +1639,12 @@ async function loginStaffByImei(imei) {
 // Atur tampilan sesuai peran: ADMIN lihat semua, STAFF hanya layar pengirim lokasi
 function terapkanPeranUser() {
   const isStaff = AppState.user && AppState.user.role === 'STAFF';
+  const navUser = document.getElementById('navbar-user-label');
+  if (navUser) {
+    navUser.textContent = AppState.user
+      ? `${AppState.user.name || AppState.user.imei} (${AppState.user.role})`
+      : '-';
+  }
   document.querySelectorAll('[data-nav-tab]').forEach(btn => {
     if (btn.dataset.navTab === 'staff-client') {
       btn.style.display = '';
@@ -1417,10 +1664,10 @@ function quickFillLogin(role) {
   const p = document.getElementById('login-password');
   if (role === 'admin') {
     if (u) u.value = 'admin';
-    if (p) p.value = 'admin123';
+    if (p) p.value = '';
   } else {
-    if (u) u.value = '358912345678901';
-    if (p) p.value = 'admin123';
+    if (u) u.value = AppState.devices[0]?.imei || '';
+    if (p) p.value = '';
   }
 }
 
@@ -1802,11 +2049,38 @@ function renderMasterDeviceTable() {
             <button onclick="bukaLayarKioskLock({ imei: '${d.imei}', nama: '${escapeHtml(d.nama)}', lat: ${d.lat}, lng: ${d.lng}, alamat: '${escapeHtml(d.alamat || '')}' })" title="Kunci Layar Kiosk" class="w-8 h-8 rounded-lg ${isHilang ? 'bg-error text-white hover:bg-error/80' : 'bg-surface-container text-tertiary hover:bg-surface-container-high'} flex items-center justify-center transition-colors">
               <span class="material-symbols-outlined text-[16px]">lock</span>
             </button>
+            <button onclick="hapusPerangkatById('${d.imei}')" title="Hapus Perangkat" class="w-8 h-8 rounded-lg bg-surface-container hover:bg-rose-600 hover:text-white text-rose-400 flex items-center justify-center transition-colors">
+              <span class="material-symbols-outlined text-[16px]">delete</span>
+            </button>
           </div>
         </td>
       </tr>
     `;
   }).join('');
+}
+
+async function hapusPerangkatById(imei) {
+  const d = AppState.devices.find(x => x.imei === imei);
+  const nama = d ? d.nama : imei;
+  if (!confirm(`Hapus perangkat ${nama} (IMEI ${imei}) dari daftar?`)) return;
+
+  const res = await callApi('deleteDevice', { imei });
+  if (res.success) {
+    showToast(res.message || `Perangkat ${nama} dihapus.`, 'success');
+    if (AppState.selectedTargetImei === imei) AppState.selectedTargetImei = '';
+    if (AppState.currentStaffImei === imei) {
+      AppState.currentStaffImei = '';
+      localStorage.removeItem('lacakhp_staff_imei');
+    }
+    await loadDashboardData();
+  } else {
+    const msg = String(res.message || '');
+    if (msg.includes('tidak dikenali')) {
+      showToast('Server Apps Script perlu di-deploy ulang dengan Code.gs terbaru, atau hapus baris langsung di Google Sheets Master_Perangkat.', 'warning');
+    } else {
+      showToast(msg || 'Gagal menghapus perangkat.', 'error');
+    }
+  }
 }
 
 function filterDesktopTable() {
@@ -2122,7 +2396,7 @@ document.addEventListener('click', (e) => {
 let desktopCountdownTimer = null;
 let desktopRemainingSeconds = 60;
 let desktopSirenMuted = false;
-let desktopBroadcastSessionCount = 24;
+let desktopBroadcastSessionCount = 0;
 
 function closeSirenModal() {
   const modal = document.getElementById('siren-confirmation-modal');
@@ -2133,6 +2407,13 @@ function closeSirenModal() {
 }
 
 function reopenSirenModal() {
+  const target = getSelectedDevice();
+  if (!target) {
+    showToast('Belum ada perangkat target yang dipilih.', 'warning');
+    return;
+  }
+  renderRemoteCommandUI();
+  resetSirenSimulation();
   const modal = document.getElementById('siren-confirmation-modal');
   if (modal) {
     modal.classList.remove('hidden');
@@ -2141,6 +2422,11 @@ function reopenSirenModal() {
 }
 
 function executeSirenSequence() {
+  const target = getSelectedDevice();
+  if (!target) {
+    showToast('Pilih perangkat target terlebih dahulu.', 'warning');
+    return;
+  }
   const promptState = document.getElementById('modal-state-prompt');
   const transState = document.getElementById('modal-state-transmitting');
   const successState = document.getElementById('modal-state-success');
@@ -2155,6 +2441,16 @@ function executeSirenSequence() {
   // Putar Web Audio synthesizer tone
   playSirenPattern(toneChecked?.value || 'ambulance', 60);
 
+  // Kirim perintah ke backend GAS untuk perangkat target terpilih
+  const msgText = document.getElementById('screen-message')?.value.trim() || `Sirene Darurat (${toneName}) Aktif`;
+  const alertType = document.getElementById('alert-type')?.value || 'Sirene_OTA';
+  callApi('sendRemoteMsg', {
+    imei: target.imei,
+    pesan: msgText,
+    tipePesan: alertType,
+    bunyikanSirene: true
+  });
+
   if (promptState) promptState.classList.add('hidden');
   if (transState) transState.classList.remove('hidden');
   if (successState) successState.classList.add('hidden');
@@ -2162,12 +2458,12 @@ function executeSirenSequence() {
   if (progressBar) progressBar.style.width = '30%';
   if (stepTitle) stepTitle.textContent = 'Mengirim Sinyal Perintah Darurat';
   if (stepDesc) stepDesc.textContent = 'Mengirim payload OTA via Google Apps Script Gateway...';
-  if (stepSub) stepSub.textContent = `Payload: SIREN_FORCE_PLAY [Tone: ${toneName}]`;
+  if (stepSub) stepSub.textContent = `Payload: SIREN_FORCE_PLAY [Target: ${target.imei} • Tone: ${toneName}]`;
 
   setTimeout(() => {
     if (progressBar) progressBar.style.width = '75%';
     if (stepTitle) stepTitle.textContent = 'Mengeksekusi Override Hardware Suara';
-    if (stepDesc) stepDesc.textContent = 'Membuka bypass mode senyap pada IMEI target...';
+    if (stepDesc) stepDesc.textContent = `Membuka bypass mode senyap pada ${target.nama}...`;
     if (stepSub) stepSub.textContent = 'Menetapkan AudioManager.STREAM_ALARM ke 100% Volume';
   }, 900);
 
@@ -2190,8 +2486,8 @@ function executeSirenSequence() {
     startDesktopSirenCountdown();
 
     // Tambah log ke tabel
-    appendDesktopSirenLog(timeStr, toneName);
-    tampilkanToast('Sirene Darurat 100% Volume BERHASIL DIAKTIFKAN di HP Staf!', 'error');
+    appendDesktopSirenLog(timeStr, toneName, target);
+    tampilkanToast(`Sirene Darurat dikirim ke ${target.nama} (${target.imei})!`, 'error');
   }, 2000);
 }
 
@@ -2308,23 +2604,27 @@ function resetSirenSimulation() {
   if (successState) successState.classList.add('hidden');
 }
 
-function appendDesktopSirenLog(timestamp, tone) {
+function appendDesktopSirenLog(timestamp, tone, target) {
   const tbody = document.getElementById('transmission-log-body');
   if (!tbody) return;
+
+  const emptyRow = document.getElementById('transmission-empty-row');
+  if (emptyRow) emptyRow.remove();
 
   desktopBroadcastSessionCount++;
   const counterEl = document.getElementById('log-counter');
   if (counterEl) counterEl.textContent = `Total Broadcast: ${desktopBroadcastSessionCount} Sesi`;
 
+  const dev = target || getSelectedDevice() || { imei: '-', nama: 'Target', divisi: '-', tipe: '-' };
   const newRow = document.createElement('tr');
   newRow.className = 'hover:bg-surface-container transition-all bg-emerald-950/20 border-l-4 border-l-emerald-400 animate-pulse';
 
   newRow.innerHTML = `
-    <td class="py-3 px-4 font-mono text-xs text-on-surface whitespace-nowrap">${timestamp}</td>
-    <td class="py-3 px-4 font-mono text-xs text-primary whitespace-nowrap font-bold">358912345678901</td>
+    <td class="py-3 px-4 font-mono text-xs text-on-surface whitespace-nowrap">${escapeHtml(timestamp)}</td>
+    <td class="py-3 px-4 font-mono text-xs text-primary whitespace-nowrap font-bold">${escapeHtml(dev.imei)}</td>
     <td class="py-3 px-4 text-xs font-semibold whitespace-nowrap">
-      Budi Santoso
-      <span class="block text-[10px] text-outline font-normal">Divisi Lapangan (Samsung A15)</span>
+      ${escapeHtml(dev.nama)}
+      <span class="block text-[10px] text-outline font-normal">${escapeHtml(dev.divisi)} (${escapeHtml(dev.tipe)})</span>
     </td>
     <td class="py-3 px-4 whitespace-nowrap">
       <span class="px-2 py-0.5 rounded bg-error-container/30 text-tertiary text-[10px] font-bold flex items-center gap-1 w-max">
